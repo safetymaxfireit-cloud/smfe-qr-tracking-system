@@ -90,7 +90,8 @@ def add_form():
     file_path = os.path.join("static", "qrcodes", f"{id}.png")
     img.save(file_path)
 
-    return redirect('/')
+#    return redirect('/')
+    return render_template("qr.html", id=id)
 
 ##########################################################
 
