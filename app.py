@@ -1,15 +1,17 @@
-from flask import Flask, request, redirect, render_template, jsonify
+from flask import Flask, request, redirect, render_template
 import sqlite3
 import qrcode
-from supabase import create_client
-import requests, os
+import os
 
-app = Flask(__name__,
-template_folder ="templates")
+app = Flask(__name__, template_folder="templates")
 
+# Secret key (for future login)
+app.secret_key = os.environ.get("SECRET_KEY", "fallbacksecret")
 
-################################################################################
+# Ensure QR folder exists
+os.makedirs("static/qrcodes", exist_ok=True)
 
+##########################################################
 
 # Create DB automatically
 def init_db():
@@ -30,8 +32,9 @@ def init_db():
 
 init_db()
 
+##########################################################
 
-
+# HOME
 @app.route('/')
 def index():
     conn = sqlite3.connect("extinguishers.db")
@@ -44,6 +47,9 @@ def index():
 
     return render_template('index.html', data=data)
 
+##########################################################
+
+# VIEW EXTINGUISHER
 @app.route('/extinguisher/<id>')
 def extinguisher(id):
     conn = sqlite3.connect("extinguishers.db")
@@ -56,8 +62,9 @@ def extinguisher(id):
 
     return render_template('detail.html', data=data)
 
+##########################################################
 
-
+# ADD DATA + GENERATE QR
 @app.route('/add-form', methods=['POST'])
 def add_form():
     id = request.form['id']
@@ -74,114 +81,26 @@ def add_form():
     conn.commit()
     conn.close()
 
-# 🔥 Generate QR
-    url = f"http://192.168.0.103:5002/extinguisher/{id}"
+    # 🔥 Use LIVE URL (Render)
+    base_url = os.environ.get("BASE_URL", "http://127.0.0.1:5002")
+    url = f"{base_url}/extinguisher/{id}"
+
     img = qrcode.make(url)
 
     file_path = os.path.join("static", "qrcodes", f"{id}.png")
     img.save(file_path)
 
     return redirect('/')
-    
-if __name__ == '__main__':
-    app.run(debug=True, port=5002, host='0.0.0.0')
 
-# ✅ RUN APP
-#if __name__ == "__main__":
-#    app.run(host='0.0.0.0', port=5002, debug=True)    
+##########################################################
 
-################################################################################
-
-
-
-
-
-
-# Supabase config
-SUPABASE_URL = "https://piaekrlgieptwqymbeur.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpYWVrcmxnaWVwdHdxeW1iZXVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MjIwMTUsImV4cCI6MjA5MDE5ODAxNX0.a6T13TgIe_enbB3kIO1qAFJzeslbOQk6PJTdrtzyK-s"
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-headers = {
-    "apikey": SUPABASE_KEY,
-    "Authorization": f"Bearer {SUPABASE_KEY}",
-    "Content-Type": "application/json"
-}
-
-# ✅ HOME PAGE
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-# ✅ VIEW ASSET
-@app.route("/asset/<asset_id>")
-def view_asset(asset_id):
-    url = f"{SUPABASE_URL}/rest/v1/extinguishers?asset_id=eq.{asset_id}"
-    response = requests.get(url, headers=headers)
-    data = response.json()
-
-    if not data:
-        return "Asset not found"
-
-    asset = data[0]
-
-    return f"""
-    <h2>Asset ID: {asset['asset_id']}</h2>
-    Client: {asset.get('client_name', '')}<br>
-    Type: {asset.get('type', '')}<br>
-    Capacity: {asset.get('capacity', '')}<br>
-    Expiry: {asset.get('expiry_date', '')}<br><br>
-
-    <form method="POST" action="/update/{asset_id}">
-        Technician: <input name="technician"><br>
-        Remarks: <input name="remarks"><br>
-        <button type="submit">Update Service</button>
-    </form>
-    """
-
-# ✅ UPDATE ASSET
-#@app.route("/update/<asset_id>", methods=["POST"])
-#def update(asset_id):
-#    technician = request.form.get("technician")
-#remarks = request.form.get("remarks")
-
-#    url = f"{SUPABASE_URL}/rest/v1/extinguishers?asset_id=eq.{asset_id}"
-
-#    update_data = {
-#        "technician": technician,
-#        "remarks": remarks
-#    }
-
-#    requests.patch(url, json=update_data, headers=headers)
-
-#    return redirect(f"/asset/{asset_id}")
-
-# ✅ GET ALL DATA
-@app.route("/extinguishers")
-def get_data():
-    data = supabase.table("fire_extinguisher_data").select("*").execute()
-    return jsonify(data.data)
-
-# ✅ ADD DATA
-@app.route("/add-form", methods=["POST"])
-def add_form():
-    data = {
-        "asset_id": request.form["id"],
-        "location": request.form["location"],
-        "type": request.form["type"],
-        "expiry_date": request.form["expiry_date"]
-    }
-
-    supabase.table("fire_extinguisher_data").insert(data).execute()
-
-    return "Added Successfully ✅"
-
+# HEALTH CHECK
 @app.route("/check")
 def check():
-    return str(os.listdir("templates"))
+    return "App is running ✅"
 
+##########################################################
 
-# ✅ RUN APP
-#if __name__ == "__main__":
-#    app.run(host='0.0.0.0', port=5002, debug=True)
+# RUN APP
+if __name_ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5002)))
