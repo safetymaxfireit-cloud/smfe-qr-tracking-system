@@ -11,6 +11,27 @@ app.secret_key = os.environ.get("SECRET_KEY", "fallbacksecret")
 # Ensure QR folder exists
 os.makedirs("static/qrcodes", exist_ok=True)
 
+###########################################################
+
+def init_db():
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS extinguishers (
+        id TEXT PRIMARY KEY,
+        type TEXT,
+        location TEXT,
+        expiry_date TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+init_db()
+
+
 ##########################################################
 
 # Create DB automatically
