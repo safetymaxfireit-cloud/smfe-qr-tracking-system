@@ -6,10 +6,10 @@
 <body>
     <h2>QR Generated for {{ id }}</h2>
 
-    <img src="/{{ qr_image }}" width="200"><br><br>
+    <img src="{{ url_for('static', filename='qr/' + id + '.png') }}" width="200"><br><br>
 
-    <a href="/{{ qr_image }}" download>⬇️ Download QR</a>
-
-    <p>Scan this QR to view extinguisher</p>
+    <a href="{{ url_for('static', filename='qr/' + id + '.png') }}" download>
+        Download QR
+    </a>
 </body>
 </html>
