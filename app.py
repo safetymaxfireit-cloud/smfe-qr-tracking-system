@@ -124,6 +124,35 @@ def add_form():
     return render_template("qr.html", id=id)
 
 ##########################################################
+
+@app.route('/add', methods=['GET', 'POST'])
+def add_extinguisher():
+    import sqlite3
+
+    if request.method == 'POST':
+        id = request.form['id']
+        type = request.form['type']
+        location = request.form['location']
+        expiry = request.form['expiry']
+
+        conn = sqlite3.connect("database.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        INSERT INTO extinguishers (id, type, location, expiry_date)
+        VALUES (?, ?, ?, ?)
+        """, (id, type, location, expiry))
+
+        conn.commit()
+        conn.close()
+
+        return f"✅ Added successfully! QR: /extinguisher/{id}"
+
+    return render_template("add.html")
+
+
+##########################################################
+
 # Add Test Data
 def add_test_data():
     conn = sqlite3.connect("database.db")
