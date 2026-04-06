@@ -125,6 +125,9 @@ def add_form():
 
 ##########################################################
 
+import qrcode
+import os
+
 @app.route('/add', methods=['GET', 'POST'])
 def add_extinguisher():
     import sqlite3
@@ -146,9 +149,47 @@ def add_extinguisher():
         conn.commit()
         conn.close()
 
-        return f"✅ Added successfully! QR: /extinguisher/{id}"
+        # 🔥 CREATE QR
+        base_url = os.getenv("BASE_URL", "http://127.0.0.1:5000")
+        qr_url = f"{base_url}/extinguisher/{id}"
+
+        img = qrcode.make(qr_url)
+
+        os.makedirs("static/qr", exist_ok=True)
+        file_path = f"static/qr/{id}.png"
+        img.save(file_path)
+
+        return render_template("qr.html", qr_image=file_path, id=id)
 
     return render_template("add.html")
+
+
+###########################################################
+
+#@app.route('/add', methods=['GET', 'POST'])
+#def add_extinguisher():
+#    import sqlite3
+
+ #   if request.method == 'POST':
+  #      id = request.form['id']
+   #     type = request.form['type']
+    #    location = request.form['location']
+     #   expiry = request.form['expiry']
+
+      #  conn = sqlite3.connect("database.db")
+       # cursor = conn.cursor()
+
+        # cursor.execute("""
+        # INSERT INTO extinguishers (id, type, location, expiry_date)
+        # VALUES (?, ?, ?, ?)
+        # """, (id, type, location, expiry))
+
+        # conn.commit()
+       # conn.close()
+
+      #  return f"✅ Added successfully! QR: /extinguisher/{id}"
+
+    # return render_template("add.html")
 
 
 ##########################################################
