@@ -1,20 +1,21 @@
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, render_template
 import sqlite3
 import qrcode
 import os
 
-app = Flask(__name__, template_folder="templates")
-
-# Secret key (for future login)
+app = Flask(_name_)
 app.secret_key = os.environ.get("SECRET_KEY", "fallbacksecret")
 
-# Ensure QR folder exists
-os.makedirs("static/qrcodes", exist_ok=True)
+DB_NAME = "database.db"
 
-###########################################################
+# Ensure QR folder exists
+os.makedirs("static/qr", exist_ok=True)
+
+##########################################################
+# INIT DATABASE
 
 def init_db():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -31,34 +32,12 @@ def init_db():
 
 init_db()
 
-
 ##########################################################
-
-# Create DB automatically
-def init_db():
-    conn = sqlite3.connect("extinguishers.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS extinguishers (
-        id TEXT,
-        location TEXT,
-        type TEXT,
-        expiry_date TEXT
-    )
-    """)
-
-    conn.commit()
-    conn.close()
-
-init_db()
-
-##########################################################
-
 # HOME
+
 @app.route('/')
 def index():
-    conn = sqlite3.connect("extinguishers.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM extinguishers")
@@ -69,14 +48,12 @@ def index():
     return render_template('index.html', data=data)
 
 ##########################################################
-
 # VIEW EXTINGUISHER
+
 @app.route('/extinguisher/<id>')
 def extinguisher(id):
-    import sqlite3
-
     try:
-        conn = sqlite3.connect("database.db")
+        conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM extinguishers WHERE id=?", (id,))
@@ -93,110 +70,49 @@ def extinguisher(id):
         return f"🔥 Error: {str(e)}"
 
 ##########################################################
-
-# ADD DATA + GENERATE QR
-@app.route('/add-form', methods=['POST'])
-def add_form():
-    id = request.form['id']
-    location = request.form['location']
-    type_ = request.form['type']
-    expiry_date = request.form['expiry_date']
-
-    conn = sqlite3.connect("extinguishers.db")
-    cursor = conn.cursor()
-
-    cursor.execute("INSERT INTO extinguishers VALUES (?, ?, ?, ?)",
-                   (id, location, type_, expiry_date))
-
-    conn.commit()
-    conn.close()
-
-    # 🔥 Use LIVE URL (Render)
-    base_url = os.environ.get("BASE_URL", "http://127.0.0.1:5002")
-    url = f"{base_url}/extinguisher/{id}"
-
-    img = qrcode.make(url)
-
-    file_path = os.path.join("static", "qrcodes", f"{id}.png")
-    img.save(file_path)
-
-#    return redirect('/')
-    return render_template("qr.html", id=id)
-
-##########################################################
-
-import qrcode
-import os
+# ADD + QR GENERATION
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_extinguisher():
-    import sqlite3
-
     if request.method == 'POST':
-        id = request.form['id']
-        type = request.form['type']
-        location = request.form['location']
-        expiry = request.form['expiry']
+        try:
+            id = request.form['id']
+            type_ = request.form['type']
+            location = request.form['location']
+            expiry = request.form['expiry']
 
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
+            conn = sqlite3.connect(DB_NAME)
+            cursor = conn.cursor()
 
-        cursor.execute("""
-        INSERT INTO extinguishers (id, type, location, expiry_date)
-        VALUES (?, ?, ?, ?)
-        """, (id, type, location, expiry))
+            cursor.execute("""
+            INSERT INTO extinguishers (id, type, location, expiry_date)
+            VALUES (?, ?, ?, ?)
+            """, (id, type_, location, expiry))
 
-        conn.commit()
-        conn.close()
+            conn.commit()
+            conn.close()
 
-        # 🔥 CREATE QR
-        base_url = os.getenv("BASE_URL", "http://127.0.0.1:5000")
-        qr_url = f"{base_url}/extinguisher/{id}"
+            # 🔥 QR GENERATION
+            base_url = os.getenv("BASE_URL") or "https://www.safetymaxfire.com"
+            qr_url = f"{base_url}/extinguisher/{id}"
 
-        img = qrcode.make(qr_url)
+            img = qrcode.make(qr_url)
 
-        os.makedirs("static/qr", exist_ok=True)
-        file_path = f"static/qr/{id}.png"
-        img.save(file_path)
+            file_path = f"static/qr/{id}.png"
+            img.save(file_path)
 
-        return render_template("qr.html", qr_image=file_path, id=id)
+            return render_template("qr.html", id=id)
+
+        except Exception as e:
+            return f"🔥 Error: {str(e)}"
 
     return render_template("add.html")
 
-
-###########################################################
-
-#@app.route('/add', methods=['GET', 'POST'])
-#def add_extinguisher():
-#    import sqlite3
-
- #   if request.method == 'POST':
-  #      id = request.form['id']
-   #     type = request.form['type']
-    #    location = request.form['location']
-     #   expiry = request.form['expiry']
-
-      #  conn = sqlite3.connect("database.db")
-       # cursor = conn.cursor()
-
-        # cursor.execute("""
-        # INSERT INTO extinguishers (id, type, location, expiry_date)
-        # VALUES (?, ?, ?, ?)
-        # """, (id, type, location, expiry))
-
-        # conn.commit()
-       # conn.close()
-
-      #  return f"✅ Added successfully! QR: /extinguisher/{id}"
-
-    # return render_template("add.html")
-
-
 ##########################################################
+# TEST DATA (OPTIONAL - REMOVE LATER)
 
-# Add Test Data
 def add_test_data():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -210,14 +126,13 @@ def add_test_data():
 add_test_data()
 
 ##########################################################
-
 # HEALTH CHECK
+
 @app.route("/check")
 def check():
     return "App is running ✅"
 
 ##########################################################
 
-# RUN APP
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5002)))
+if _name_ == '_main_':
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
