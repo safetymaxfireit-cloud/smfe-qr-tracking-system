@@ -124,6 +124,22 @@ def add_form():
     return render_template("qr.html", id=id)
 
 ##########################################################
+# Add Test Data
+def add_test_data():
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT OR IGNORE INTO extinguishers (id, type, location, expiry_date)
+    VALUES ('FE001', 'ABC 5kg', 'Office', '2027-12-31')
+    """)
+
+    conn.commit()
+    conn.close()
+
+add_test_data()
+
+##########################################################
 
 # HEALTH CHECK
 @app.route("/check")
