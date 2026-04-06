@@ -52,18 +52,24 @@ def index():
 # VIEW EXTINGUISHER
 @app.route('/extinguisher/<id>')
 def extinguisher(id):
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
+    import sqlite3
 
-    cursor.execute("SELECT * FROM extinguishers WHERE id=?", (id,))
-    data = cursor.fetchone()
+    try:
+        conn = sqlite3.connect("database.db")
+        cursor = conn.cursor()
 
-    conn.close()
+        cursor.execute("SELECT * FROM extinguishers WHERE id=?", (id,))
+        data = cursor.fetchone()
 
-    if data is None:
-        return "❌ No data found for this extinguisher"
+        conn.close()
 
-    return render_template("view.html", data=data)
+        if data is None:
+            return f"❌ No data found for ID: {id}"
+
+        return render_template("view.html", data=data)
+
+    except Exception as e:
+        return f"🔥 Error: {str(e)}"
 
 ##########################################################
 
