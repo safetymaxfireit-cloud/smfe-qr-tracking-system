@@ -1,15 +1,23 @@
-<h2>QR Generated Successfully ✅</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code</title>
+</head>
+<body style="text-align:center; font-family: Arial;">
 
-<p>Asset ID: {{ id }}</p>
+    <h2>QR Code for {{ id }}</h2>
 
-<img src="/static/qrcodes/{{ id }}.png" width="250">
+    <img src="/qr/{{ id }}" width="250">
 
-<br><br>
+    <br><br>
 
-<a href="/static/qrcodes/{{ id }}.png" download>
-    <button>Download QR</button>
-</a>
+    <a href="/qr/{{ id }}" download>
+        Download QR
+    </a>
 
-<br><br>
+    <br><br>
 
-<a href="/">Back to Home</a>
+    <a href="/">Back to Home</a>
+
+</body>
+</html>
