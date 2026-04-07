@@ -1,34 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Print QR Codes</title>
+    <title>QR Stickers - SafetyMax</title>
+
     <style>
-        body { font-family: Arial; }
+        body {
+            font-family: Arial;
+            margin: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            text-align: center;
+            gap: 15px;
         }
-        img { width: 120px; }
+
+        .sticker {
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: center;
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .sticker img {
+            width: 100px;
+            margin: auto;
+        }
+
+        .title {
+            font-size: 10px;
+            font-weight: bold;
+            color: red;
+        }
+
+        .id {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
         @media print {
             body {
                 margin: 0;
             }
-}
-</style>
+        }
     </style>
+
 </head>
+
 <body>
 
-<h2>QR Codes Sheet</h2>
+<h2>SafetyMax Fire Engineers - QR Stickers</h2>
 
 <div class="grid">
     {% for item in data %}
-        <div>
-            <img src="/qr/{{ item[0] }}">
-            <p>{{ item[0] }}</p>
-        </div>
+    <div class="sticker">
+        <div class="title">SCAN FOR DETAILS</div>
+        
+        <img src="/qr/{{ item[0] }}">
+        
+        <div class="id">{{ item[0] }}</div>
+    </div>
     {% endfor %}
 </div>
 
