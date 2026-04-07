@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Print QR Codes</title>
+    <style>
+        body { font-family: Arial; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+        img { width: 120px; }
+    </style>
+</head>
+<body>
+
+<h2>QR Codes Sheet</h2>
+
+<div class="grid">
+    {% for item in data %}
+        <div>
+            <img src="/qr/{{ item[0] }}">
+            <p>{{ item[0] }}</p>
+        </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>
