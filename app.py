@@ -1,4 +1,5 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, Response
+import io
 import sqlite3
 import qrcode
 import os
@@ -9,7 +10,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "fallbacksecret")
 DB_NAME = "database.db"
 
 # Ensure QR folder exists
-os.makedirs("static/qr", exist_ok=True)
+#os.makedirs("static/qr", exist_ok=True)
 
 ##########################################################
 # INIT DATABASE
@@ -98,8 +99,8 @@ def add_extinguisher():
 
             img = qrcode.make(qr_url)
 
-            file_path = f"static/qr/{id}.png"
-            img.save(file_path)
+  #          file_path = f"static/qr/{id}.png"
+  #          img.save(file_path)
 
             return render_template("qr.html", id=id)
 
@@ -121,7 +122,7 @@ def generate_qr(id):
     img.save(buffer, format="PNG")
     buffer.seek(0)
 
-    return Response(buffer, mimetype='image/png')
+    return Response(buffer.getvalue(), mimetype='image/png')
 
 ##########################################################
 # TEST DATA (OPTIONAL - REMOVE LATER)
