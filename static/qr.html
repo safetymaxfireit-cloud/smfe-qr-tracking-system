@@ -6,9 +6,9 @@
 <body>
     <h2>QR Generated for {{ id }}</h2>
 
-    <img src="{{ url_for('static', filename='qr/' + id + '.png') }}" width="200"><br><br>
+    <img src="/qr/{{ id }}" width="200">
 
-    <a href="{{ url_for('static', filename='qr/' + id + '.png') }}" download>
+    <a href="/qr/{{ id }}" download>Download QR</a>
         Download QR
     </a>
 </body>
