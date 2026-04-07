@@ -109,6 +109,21 @@ def add_extinguisher():
     return render_template("add.html")
 
 ##########################################################
+
+@app.route('/qr/<id>')
+def generate_qr(id):
+    base_url = os.getenv("BASE_URL") or "https://www.safetymaxfire.com"
+    qr_url = f"{base_url}/extinguisher/{id}"
+
+    img = qrcode.make(qr_url)
+
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+
+    return Response(buffer, mimetype='image/png')
+
+##########################################################
 # TEST DATA (OPTIONAL - REMOVE LATER)
 
 def add_test_data():
