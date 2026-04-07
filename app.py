@@ -142,6 +142,21 @@ def add_test_data():
 add_test_data()
 
 ##########################################################
+
+@app.route('/print_qr')
+def print_qr():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM extinguishers")
+    data = cursor.fetchall()
+
+    conn.close()
+
+    return render_template("print_qr.html", data=data)
+
+##########################################################
+
 # HEALTH CHECK
 
 @app.route("/check")
