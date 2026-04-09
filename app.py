@@ -1,22 +1,23 @@
 from flask import Flask, request, render_template, Response
 import io
-import sqlite3
 import qrcode
 import os
+import psycopg2
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "fallbacksecret")
 
-DB_NAME = "database.db"
+# 🔥 DATABASE CONNECTION
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Ensure QR folder exists
-#os.makedirs("static/qr", exist_ok=True)
+def get_connection():
+    return psycopg2.connect(DATABASE_URL)
 
 ##########################################################
 # INIT DATABASE
 
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -38,10 +39,10 @@ init_db()
 
 @app.route('/')
 def index():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM extinguishers")
+    cursor.execute("SELECT * FROM extinguishers ORDER BY id")
     data = cursor.fetchall()
 
     conn.close()
@@ -54,10 +55,10 @@ def index():
 @app.route('/extinguisher/<id>')
 def extinguisher(id):
     try:
-        conn = sqlite3.connect(DB_NAME)
+        conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM extinguishers WHERE id=?", (id,))
+        cursor.execute("SELECT * FROM extinguishers WHERE id=%s", (id,))
         data = cursor.fetchone()
 
         conn.close()
@@ -82,25 +83,17 @@ def add_extinguisher():
             location = request.form['location']
             expiry = request.form['expiry']
 
-            conn = sqlite3.connect(DB_NAME)
+            conn = get_connection()
             cursor = conn.cursor()
 
             cursor.execute("""
             INSERT INTO extinguishers (id, type, location, expiry_date)
-            VALUES (?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (id) DO NOTHING
             """, (id, type_, location, expiry))
 
             conn.commit()
             conn.close()
-
-            # 🔥 QR GENERATION
-            base_url = os.getenv("BASE_URL") or "https://www.safetymaxfire.com"
-            qr_url = f"{base_url}/extinguisher/{id}"
-
-            img = qrcode.make(qr_url)
-
-  #          file_path = f"static/qr/{id}.png"
-  #          img.save(file_path)
 
             return render_template("qr.html", id=id)
 
@@ -110,6 +103,7 @@ def add_extinguisher():
     return render_template("add.html")
 
 ##########################################################
+# QR GENERATION (DYNAMIC)
 
 @app.route('/qr/<id>')
 def generate_qr(id):
@@ -125,30 +119,14 @@ def generate_qr(id):
     return Response(buffer.getvalue(), mimetype='image/png')
 
 ##########################################################
-# TEST DATA (OPTIONAL - REMOVE LATER)
-
-def add_test_data():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    INSERT OR IGNORE INTO extinguishers (id, type, location, expiry_date)
-    VALUES ('FE001', 'ABC 5kg', 'Office', '2027-12-31')
-    """)
-
-    conn.commit()
-    conn.close()
-
-add_test_data()
-
-##########################################################
+# PRINT MULTIPLE QR
 
 @app.route('/print_qr')
 def print_qr():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT id FROM extinguishers")
+    cursor.execute("SELECT id FROM extinguishers ORDER BY id")
     data = cursor.fetchall()
 
     conn.close()
@@ -156,7 +134,6 @@ def print_qr():
     return render_template("print_qr.html", data=data)
 
 ##########################################################
-
 # HEALTH CHECK
 
 @app.route("/check")
