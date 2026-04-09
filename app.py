@@ -125,7 +125,7 @@ def index():
 def extinguisher(id):
      if 'user' not in session:
         return redirect('/login')   
-    try:
+        try:
         conn = get_connection()
         cursor = conn.cursor()
 
