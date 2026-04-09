@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, Response
+from flask import Flask, session, redirect, url_for, request, render_template, Response
 import io
 import qrcode
 import os
@@ -35,10 +35,79 @@ def init_db():
 init_db()
 
 ##########################################################
+# USERS TABLE 
+
+def init_users():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL
+    )
+    """)
+
+    # Default admin
+    cursor.execute("""
+    INSERT INTO users (username, password, role)
+    VALUES ('admin', 'admin123', 'admin')
+    ON CONFLICT (username) DO NOTHING
+    """)
+
+    conn.commit()
+    conn.close()
+
+init_users()
+
+##########################################################
+# LOGIN ROUTE
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM users WHERE username=%s AND password=%s",
+            (username, password)
+        )
+        user = cursor.fetchone()
+
+        conn.close()
+
+        if user:
+            session['user'] = username
+            session['role'] = user[3]
+            return redirect('/')
+        else:
+            return "❌ Invalid login"
+
+    return render_template("login.html")
+
+
+##########################################################
+# LOGOUT ROUTE
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/login')
+
+##########################################################
+
 # HOME
 
 @app.route('/')
 def index():
+    if 'user' not in session:
+        return redirect('/login')
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -54,6 +123,8 @@ def index():
 
 @app.route('/extinguisher/<id>')
 def extinguisher(id):
+     if 'user' not in session:
+        return redirect('/login')   
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -76,6 +147,8 @@ def extinguisher(id):
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_extinguisher():
+    if 'user' not in session:
+        return redirect('/login')
     if request.method == 'POST':
         try:
             id = request.form['id']
@@ -123,6 +196,8 @@ def generate_qr(id):
 
 @app.route('/print_qr')
 def print_qr():
+    if 'user' not in session:
+        return redirect('/login')
     conn = get_connection()
     cursor = conn.cursor()
 
