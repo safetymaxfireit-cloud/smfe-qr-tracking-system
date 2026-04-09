@@ -134,35 +134,6 @@ def print_qr():
     return render_template("print_qr.html", data=data)
 
 ##########################################################
-
-@app.route('/setup-db')
-def setup_db():
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    # Create users table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        role TEXT NOT NULL
-    )
-    """)
-
-    # Insert admin user
-    cursor.execute("""
-    INSERT INTO users (username, password, role)
-    VALUES ('admin', 'admin123', 'admin')
-    ON CONFLICT (username) DO NOTHING
-    """)
-
-    conn.commit()
-    conn.close()
-
-    return "✅ Database setup done"
-
-##########################################################
 # HEALTH CHECK
 
 @app.route("/check")
