@@ -181,7 +181,7 @@ def add_extinguisher():
 
 @app.route('/qr/<id>')
 def generate_qr(id):
-    base_url = os.getenv("BASE_URL") or "https://www.safetymaxfire.com"
+    base_url = "https://app.safetymaxfire.com"
     qr_url = f"{base_url}/extinguisher/{id}"
 
     img = qrcode.make(qr_url)
