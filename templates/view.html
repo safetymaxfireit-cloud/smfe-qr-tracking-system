@@ -10,6 +10,9 @@
     <p><b>Type:</b> {{ data[1] }}</p>
     <p><b>Location:</b> {{ data[2] }}</p>
     <p><b>Expiry Date:</b> {{ data[3] }}</p>
+{% if session['role'] == 'head' %}
+    <a href="/edit/{{ data[0] }}">✏️ Edit</a>
+{% endif %}
 
 </body>
 </html>
