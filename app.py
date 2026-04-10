@@ -123,9 +123,10 @@ def index():
 
 @app.route('/extinguisher/<id>')
 def extinguisher(id):
-     if 'user' not in session:
-        return redirect('/login')   
-     try:
+    if 'user' not in session:
+        return redirect('/login')
+
+    try:
         conn = get_connection()
         cursor = conn.cursor()
 
