@@ -4,6 +4,16 @@ import qrcode
 import os
 import psycopg2
 
+from functools import wraps
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user' not in session:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated_function
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "fallbacksecret")
 
@@ -105,6 +115,7 @@ def logout():
 # HOME
 
 @app.route('/')
+@login_required
 def index():
     if 'user' not in session:
         return redirect('/login')
@@ -122,6 +133,7 @@ def index():
 # VIEW EXTINGUISHER
 
 @app.route('/extinguisher/<id>')
+@login_required
 def extinguisher(id):
     if 'user' not in session:
         return redirect('/login')
@@ -147,6 +159,7 @@ def extinguisher(id):
 # ADD + QR GENERATION
 
 @app.route('/add', methods=['GET', 'POST'])
+@login_required
 def add_extinguisher():
     if 'user' not in session:
         return redirect('/login')
@@ -196,6 +209,7 @@ def generate_qr(id):
 # PRINT MULTIPLE QR
 
 @app.route('/print_qr')
+@login_required
 def print_qr():
     if 'user' not in session:
         return redirect('/login')
