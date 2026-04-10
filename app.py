@@ -14,6 +14,20 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def role_required(required_role):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'user' not in session:
+                return redirect('/login')
+
+            if session.get('role') != required_role:
+                return "❌ Access Denied"
+
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
 #Secret Key
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "fallbacksecret")
@@ -241,7 +255,7 @@ def print_qr():
 ##########################################################
 #EDIT ROUTE
 @app.route('/edit/<id>', methods=['GET', 'POST'])
-@role_required('admin')   # Only head can edit
+@role_required('head')   # Only head can edit
 def edit_extinguisher(id):
     conn = get_connection()
     cursor = conn.cursor()
