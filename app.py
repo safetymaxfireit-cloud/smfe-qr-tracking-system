@@ -14,8 +14,13 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+#Secret Key
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "fallbacksecret")
+
+#Session Fix (For Render/HTTPS)
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # 🔥 DATABASE CONNECTION
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -117,8 +122,6 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    if 'user' not in session:
-        return redirect('/login')
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -133,10 +136,7 @@ def index():
 # VIEW EXTINGUISHER
 
 @app.route('/extinguisher/<id>')
-@login_required
 def extinguisher(id):
-    if 'user' not in session:
-        return redirect('/login')
 
     try:
         conn = get_connection()
@@ -161,8 +161,6 @@ def extinguisher(id):
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
 def add_extinguisher():
-    if 'user' not in session:
-        return redirect('/login')
     if request.method == 'POST':
         try:
             id = request.form['id']
@@ -211,8 +209,6 @@ def generate_qr(id):
 @app.route('/print_qr')
 @login_required
 def print_qr():
-    if 'user' not in session:
-        return redirect('/login')
     conn = get_connection()
     cursor = conn.cursor()
 
