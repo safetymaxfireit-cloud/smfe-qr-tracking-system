@@ -68,7 +68,7 @@ def init_users():
     # Default admin
     cursor.execute("""
     INSERT INTO users (username, password, role)
-    VALUES ('admin', 'admin123', 'admin')
+    VALUES ('admin', 'SMFE@369', 'admin')
     ON CONFLICT (username) DO NOTHING
     """)
 
@@ -76,6 +76,25 @@ def init_users():
     conn.close()
 
 init_users()
+
+###########################################################
+# CREATE USER
+@app.route('/create-user')
+def create_user():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    INSERT INTO users (username, password, role)
+    VALUES
+    ('creator', 'SMFE@369', 'head'),
+    ON CONFLICT (username) DO NOTHING
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "Users Created"
 
 ##########################################################
 # LOGIN ROUTE
@@ -219,6 +238,36 @@ def print_qr():
 
     return render_template("print_qr.html", data=data)
 
+##########################################################
+#EDIT ROUTE
+@app.route('/edit/<id>', methods=['GET', 'POST'])
+@role_required('admin')   # Only head can edit
+def edit_extinguisher(id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if request.method == 'POST':       
+        type_ = request.form['type']
+        location = request.form['location']
+        expiry = request.form['expiry']
+
+        cursor.execute("""
+        UPDATE extinguishers
+        SET type=%s, location=%s, expiry_date=%s
+        WHERE id=%s
+        """, (type_, location, expiry, id))
+
+        conn.commit()
+        conn.close()
+
+        return redirect(f"/extinguisher/{id}")
+
+    cursor.execute("SELECT * FROM extinguishers WHERE id=%s", (id,))
+    data = cursor.fetchone()
+    conn.close()
+
+    return render_template("edit.html", data=data)
+    
 ##########################################################
 # HEALTH CHECK
 
