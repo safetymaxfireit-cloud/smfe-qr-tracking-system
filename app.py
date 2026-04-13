@@ -2,6 +2,7 @@ from flask import Flask, session, redirect, url_for, request, render_template, R
 import io
 import qrcode
 import os
+import re
 import psycopg2
 
 from functools import wraps
@@ -27,6 +28,10 @@ def role_required(required_role):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+def validate_id(id):
+    pattern = r"^(SM|CLI)FE\d{4}[A-Za-z]+_(ABC|CLA|ABM|CLM|CO2|DCP|WCO|MFO|KCL|LIO)\d+$"
+    return re.match(pattern, id)
 
 #Secret Key
 app = Flask(__name__)
@@ -226,6 +231,9 @@ def add_extinguisher():
 
         except Exception as e:
             return f"🔥 Error: {str(e)}"
+
+        if not validate_id(id):
+            return "❌ Invalid ID Format"
 
     return render_template("add.html")
 
