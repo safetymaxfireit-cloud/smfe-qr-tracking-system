@@ -202,18 +202,22 @@ def add_extinguisher():
     if request.method == 'POST':
         try:
             id = request.form['id']
+            client_name = request.form['client_name']
+            address = request.form['address']
+            po_number = request.form['po_number']
             type_ = request.form['type']
             location = request.form['location']
             expiry = request.form['expiry']
+            remarks = request.form['remarks']
 
             conn = get_connection()
             cursor = conn.cursor()
 
             cursor.execute("""
-            INSERT INTO extinguishers (id, type, location, expiry_date)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO extinguishers (id, client_name, address, po_number, type, location, expiry_date, remarks)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id) DO NOTHING
-            """, (id, type_, location, expiry))
+            """, (id, client_name, address, po_number, type_, location, expiry, remarks))
 
             conn.commit()
             conn.close()
