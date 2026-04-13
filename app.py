@@ -68,6 +68,26 @@ def init_db():
 init_db()
 
 ##########################################################
+
+@app.route('/run-sql')
+def run_sql():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    ALTER TABLE extinguishers ADD COLUMN IF NOT EXISTS client_name TEXT;
+    ALTER TABLE extinguishers ADD COLUMN IF NOT EXISTS address TEXT;
+    ALTER TABLE extinguishers ADD COLUMN IF NOT EXISTS po_number TEXT;
+    ALTER TABLE extinguishers ADD COLUMN IF NOT EXISTS remarks TEXT;
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "✅ Columns Added"
+
+##########################################################
+
 # USERS TABLE 
 
 def init_users():
