@@ -4,6 +4,7 @@ import qrcode
 import os
 import re
 import psycopg2
+import pandas as pd
 
 from functools import wraps
 
@@ -285,6 +286,49 @@ def print_qr():
     conn.close()
 
     return render_template("print_qr.html", data=data)
+
+##########################################################
+#BULK UPLOAD
+@app.route('/bulk_upload', methods=['GET', 'POST'])
+@role_required('admin')
+def bulk_upload():
+    if request.method == 'POST':
+        file = request.files['file']
+
+        df = pd.read_excel(file)
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        for index, row in df.iterrows():
+            id = generate_id(
+                row['Company'],
+                row['Location'],
+                row['Type']
+            )
+
+            cursor.execute("""
+            INSERT INTO extinguishers 
+            (id, client_name, address, po_number, type, location, expiry_date, remarks)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+            ON CONFLICT (id) DO NOTHING
+            """, (
+                id,
+                row['Client Name'],
+                row['Address'],
+                row['PO Number'],
+                row['Type'],
+                row['Location'],
+                str(row['Expiry Date']),
+                row['Remarks']
+            ))
+
+        conn.commit()
+        conn.close()
+
+        return "✅ Bulk Upload Successful"
+
+    return render_template("bulk_upload.html")
 
 ##########################################################
 #EDIT ROUTE
