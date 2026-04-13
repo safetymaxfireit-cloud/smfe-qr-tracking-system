@@ -29,6 +29,19 @@ def role_required(required_role):
         return decorated_function
     return decorator
 
+def generate_id(company, location, type_code):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM extinguishers")
+    count = cursor.fetchone()[0] + 1
+
+    serial = str(count).zfill(4)
+
+    location_clean = re.sub(r'\s+', '', location)
+
+    return f"{company}FE{serial}{location_clean}_{type_code}"
+
 def validate_id(id):
     pattern = r"^(SM|CLI)FE\d{4}[A-Za-z]+_(ABC|CLA|ABM|CLM|CO2|DCP|WCO|MFO|KCL|LIO)\d+$"
     return re.match(pattern, id)
@@ -206,7 +219,11 @@ def extinguisher(id):
 def add_extinguisher():
     if request.method == 'POST':
         try:
-            id = request.form['id']
+            company = request.form['company']   # SM or CLI
+            location = request.form['location']
+            type_ = request.form['type']        # ABC5, CO26 etc
+
+            id = generate_id(company, location, type_)
             client_name = request.form['client_name']
             address = request.form['address']
             po_number = request.form['po_number']
