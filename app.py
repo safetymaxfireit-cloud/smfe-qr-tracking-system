@@ -52,9 +52,13 @@ def init_db():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS extinguishers (
         id TEXT PRIMARY KEY,
+        client_name TEXT,
+        address TEXT,
+        po_number TEXT,
         type TEXT,
         location TEXT,
-        expiry_date TEXT
+        expiry_date TEXT,
+        remarks TEXT
     )
     """)
 
