@@ -6,10 +6,15 @@
 <body>
     <h2>Extinguisher Details</h2>
 
-    <p><b>ID:</b> {{ data[0] }}</p>
-    <p><b>Type:</b> {{ data[1] }}</p>
-    <p><b>Location:</b> {{ data[2] }}</p>
-    <p><b>Expiry Date:</b> {{ data[3] }}</p>
+    ID: {{ data[0] }} <br><br>
+    Client: {{ data[1] }} <br><br>
+    Address: {{ data[2] }} <br><br>
+    PO Number: {{ data[3] }} <br><br>
+    Type: {{ data[4] }} <br><br>
+    Location: {{ data[5] }} <br><br>
+    Expiry: {{ data[6] }} <br><br>
+    Remarks: {{ data[7] }} <br><br>
+
 {% if session['role'] == 'head' %}
     <a href="/edit/{{ data[0] }}">✏️ Edit</a>
 {% endif %}
