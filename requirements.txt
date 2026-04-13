@@ -3,3 +3,5 @@ gunicorn
 qrcode
 pillow
 psycopg2-binary
+pandas
+openpyxl
