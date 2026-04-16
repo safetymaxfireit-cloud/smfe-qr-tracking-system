@@ -398,21 +398,6 @@ def edit_extinguisher(id):
     conn.close()
 
     return render_template("edit.html", data=data)
-    
-##########################################################
-
-@app.route('/run-sql')
-def run_sql():
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("ALTER TABLE extinguishers ADD COLUMN serial_number SERIAL")
-
-    conn.commit()
-    conn.close()
-
-    return "✅ Done"
-
 
 ##########################################################
 # HEALTH CHECK
