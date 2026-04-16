@@ -253,9 +253,10 @@ def add_extinguisher():
             type_ = request.form['type']        # ABC5, CO26 etc
 
             id = generate_id(company, location, type_)
-            
+
+            #validation inside try
             if not validate_id(id):
-            return "❌ Invalid ID Format"
+                return "❌ Invalid ID Format"
             
             client_name = request.form['client_name']
             address = request.form['address']
