@@ -141,7 +141,7 @@ def create_user():
     cursor.execute("""
     INSERT INTO users (username, password, role)
     VALUES
-    ('creator', 'SMFE@369', 'head'),
+    ('creator', 'SMFE@369', 'head')
     ON CONFLICT (username) DO NOTHING
     """)
 
@@ -253,6 +253,10 @@ def add_extinguisher():
             type_ = request.form['type']        # ABC5, CO26 etc
 
             id = generate_id(company, location, type_)
+            
+            if not validate_id(id):
+            return "❌ Invalid ID Format"
+            
             client_name = request.form['client_name']
             address = request.form['address']
             po_number = request.form['po_number']
@@ -277,9 +281,6 @@ def add_extinguisher():
 
         except Exception as e:
             return f"🔥 Error: {str(e)}"
-
-        if not validate_id(id):
-            return "❌ Invalid ID Format"
 
     return render_template("add.html")
 
@@ -373,9 +374,18 @@ def edit_extinguisher(id):
 
         cursor.execute("""
         UPDATE extinguishers
-        SET type=%s, location=%s, expiry_date=%s
+        SET client_name=%s, address=%s, po_number=%s, type=%s, location=%s, expiry_date=%s, remarks=%s
         WHERE id=%s
-        """, (type_, location, expiry, id))
+        """, (
+            request.form['client_name'],
+            request.form['address'],
+            request.form['po_number'],
+            request.form['type'],
+            request.form['location'],
+            request.form['expiry'],
+            request.form['remarks'],
+            id
+        ))
 
         conn.commit()
         conn.close()
