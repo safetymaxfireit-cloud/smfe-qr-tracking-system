@@ -30,33 +30,22 @@ def role_required(required_role):
         return decorated_function
     return decorator
 
-def generate_id(company, location, type_full):
+def generate_id(company, location, type_):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Get last serial number
-    cursor.execute("""
-        SELECT id FROM extinguishers 
-        WHERE id LIKE %s 
-        ORDER BY id DESC LIMIT 1
-    """, (f"{company}_FE%",))
+    # Get next serial number (latest one)
+    cursor.execute("SELECT nextval(pg_get_serial_sequence('extinguishers','serial_number'))")
+    number = cursor.fetchone()[0]
 
-    last = cursor.fetchone()
+    conn.commit()
+    conn.close()
 
-    if last:
-        last_id = last[0]
-        last_num = int(last_id.split('_FE')[1][:4])
-        new_num = last_num + 1
-    else:
-        new_num = 1
+    serial = str(number).zfill(5)
 
-    serial = str(new_num).zfill(4)
+    location_clean = location.replace(" ", "")
+    type_clean = type_.replace(" ", "")
 
-    # Clean values
-    location_clean = location.strip().replace(" ", "")
-    type_clean = type_full.replace(" ", "")  # remove space in "ABC 6kg"
-
-    # FINAL FORMAT
     return f"{company}FE{serial}{location_clean}_{type_clean}"
 
 def validate_id(id):
@@ -252,7 +241,7 @@ def add_extinguisher():
             location = request.form['location']
             type_ = request.form['type']        # ABC5, CO26 etc
 
-            id = generate_id(company, location, type_)
+            #id = generate_id(company, location, type_)
 
             #validation inside try
             if not validate_id(id):
@@ -268,13 +257,27 @@ def add_extinguisher():
 
             conn = get_connection()
             cursor = conn.cursor()
-
+            #insert    
             cursor.execute("""
-            INSERT INTO extinguishers (id, client_name, address, po_number, type, location, expiry_date, remarks)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (id) DO NOTHING
-            """, (id, client_name, address, po_number, type_, location, expiry, remarks))
+            INSERT INTO extinguishers 
+            (client_name, address, po_number, type, location, expiry_date, remarks)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING serial_number
+            """, (client_name, address, po_number, type_, location, expiry, remarks))
 
+            serial_number = cursor.fetchone()[0]
+
+            #Generate ID
+            serial = str(serial_number).zfill(5)
+
+            id = f"{company}FE{serial}{location.replace(' ','')}{type.replace(' ','')}"
+
+            #Update ID
+            cursor.execute("""
+            UPDATE extinguishers SET id=%s WHERE serial_number=%s
+            """, (id, serial_number))
+
+            #commit
             conn.commit()
             conn.close()
 
