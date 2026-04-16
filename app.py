@@ -30,18 +30,34 @@ def role_required(required_role):
         return decorated_function
     return decorator
 
-def generate_id(company, location, type_code):
+def generate_id(company, location, type_full):
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) FROM extinguishers")
-    count = cursor.fetchone()[0] + 1
+    # Get last serial number
+    cursor.execute("""
+        SELECT id FROM extinguishers 
+        WHERE id LIKE %s 
+        ORDER BY id DESC LIMIT 1
+    """, (f"{company}_FE%",))
 
-    serial = str(count).zfill(4)
+    last = cursor.fetchone()
 
-    location_clean = re.sub(r'\s+', '', location)
+    if last:
+        last_id = last[0]
+        last_num = int(last_id.split('_FE')[1][:4])
+        new_num = last_num + 1
+    else:
+        new_num = 1
 
-    return f"{company}FE{serial}{location_clean}_{type_code}"
+    serial = str(new_num).zfill(4)
+
+    # Clean values
+    location_clean = location.strip().replace(" ", "")
+    type_clean = type_full.replace(" ", "")  # remove space in "ABC 6kg"
+
+    # FINAL FORMAT
+    return f"{company}FE{serial}{location_clean}_{type_clean}"
 
 def validate_id(id):
     pattern = r"^(SM|CLI)FE\d{4}[A-Za-z]+_(ABC|CLA|ABM|CLM|CO2|DCP|WCO|MFO|KCL|LIO)\d+$"
@@ -199,8 +215,20 @@ def extinguisher(id):
         conn = get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM extinguishers WHERE id=%s", (id,))
-        data = cursor.fetchone()
+        cursor.execute("""
+        SELECT id, client_name, address, po_number, type, location, expiry_date, remarks 
+        FROM extinguishers WHERE id=%s
+        """, (id,))
+
+        row = cursor.fetchone()
+
+        if row is None:
+            return f"❌ No data found for ID: {id}"
+
+        # 🔥 Convert to dictionary
+        columns = [desc[0] for desc in cursor.description]
+        data = dict(zip(columns, row))
+
 
         conn.close()
 
