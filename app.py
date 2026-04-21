@@ -270,7 +270,7 @@ def edit_extinguisher(id):
 def qr(id):
     url = f"https://app.safetymaxfire.com/extinguisher/{id}"
 
-    img = qrcode.make(url)
+    img = qrcode.make(qr_url, box_size=3, border=2)
 
     buf = io.BytesIO()
     img.save(buf, format="PNG")
