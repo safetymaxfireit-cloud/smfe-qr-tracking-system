@@ -348,34 +348,33 @@ def bulk_upload():
 #            ))
 
         for index, row in df.iterrows():
-
     # STEP 1: Insert data (without ID)
             cursor.execute("""
-        INSERT INTO extinguishers 
-        (client_name, address, po_number, type, location, expiry_date, remarks)
-        VALUES (%s,%s,%s,%s,%s,%s,%s)
-        RETURNING serial_number
-        """, (
-            row['Client Name'],
-            row['Address'],
-            row['PO Number'],
-            row['Type'],
-            row['Location'],
-            str(row['Expiry Date']),
-            row['Remarks']
-        ))
+            INSERT INTO extinguishers 
+            (client_name, address, po_number, type, location, expiry_date, remarks)
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
+            RETURNING serial_number
+            """, (
+                row['Client Name'],
+                row['Address'],
+                row['PO Number'],
+                row['Type'],
+                row['Location'],
+                str(row['Expiry Date']),
+                row['Remarks']
+            ))
 
-        serial_number = cursor.fetchone()[0]
+            serial_number = cursor.fetchone()[0]
 
     # STEP 2: Generate ID
-        serial = str(serial_number).zfill(5)
+            serial = str(serial_number).zfill(5)
 
-        id = f"{row['Company']}_FE{serial}_{row['Location'].replace(' ','')}_{row['Type'].replace(' ','')}"
+            id = f"{row['Company']}_FE{serial}_{row['Location'].replace(' ','')}_{row['Type'].replace(' ','')}"
 
     # STEP 3: Update ID
-        cursor.execute("""
-        UPDATE extinguishers SET id=%s WHERE serial_number=%s
-        """, (id, serial_number))
+            cursor.execute("""
+            UPDATE extinguishers SET id=%s WHERE serial_number=%s
+            """, (id, serial_number))
 
         conn.commit()
         conn.close()
