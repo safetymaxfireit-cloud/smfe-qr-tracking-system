@@ -326,26 +326,6 @@ def bulk_upload():
     return render_template("bulk_upload.html")
 
 # ================================
-@app.route('/add-order-column')
-def add_order_column():
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-        ALTER TABLE extinguishers 
-        ADD COLUMN order_id TEXT;
-        """)
-
-        conn.commit()
-        conn.close()
-
-        return "✅ order_id column added successfully"
-
-    except Exception as e:
-        return f"🔥 Error: {str(e)}"
-
-# ================================
 @app.route('/check')
 def check():
     return "✅ Running"
