@@ -30,27 +30,27 @@ def role_required(required_role):
         return decorated_function
     return decorator
 
-def generate_id(company, location, type_):
-    conn = get_connection()
-    cursor = conn.cursor()
+#def generate_id(company, location, type_):
+#    conn = get_connection()
+#    cursor = conn.cursor()
 
     # Get next serial number (latest one)
-    cursor.execute("SELECT nextval(pg_get_serial_sequence('extinguishers','serial_number'))")
-    number = cursor.fetchone()[0]
+#    cursor.execute("SELECT nextval(pg_get_serial_sequence('extinguishers','serial_number'))")
+#   number = cursor.fetchone()[0]
 
-    conn.commit()
-    conn.close()
+#    conn.commit()
+#   conn.close()
 
-    serial = str(number).zfill(5)
+#   serial = str(number).zfill(5)
 
-    location_clean = location.replace(" ", "")
-    type_clean = type_.replace(" ", "")
+#   location_clean = location.replace(" ", "")
+#   type_clean = type_.replace(" ", "")
 
-    return f"{company}FE{serial}{location_clean}_{type_clean}"
+#   return f"{company}FE{serial}{location_clean}_{type_clean}"
 
-def validate_id(id):
-    pattern = r"^(SM|CLI)FE\d{4}[A-Za-z]+_(ABC|CLA|ABM|CLM|CO2|DCP|WCO|MFO|KCL|LIO)\d+$"
-    return re.match(pattern, id)
+#def validate_id(id):
+#    pattern = r"^(SM|CLI)FE\d{4}[A-Za-z]+_(ABC|CLA|ABM|CLM|CO2|DCP|WCO|MFO|KCL|LIO)\d+$"
+#    return re.match(pattern, id)
 
 #Secret Key
 app = Flask(__name__)
@@ -178,7 +178,6 @@ def logout():
     return redirect('/login')
 
 ##########################################################
-
 # HOME
 
 @app.route('/')
@@ -237,27 +236,20 @@ def extinguisher(id):
 def add_extinguisher():
     if request.method == 'POST':
         try:
-            company = request.form['company']   # SM or CLI
+            company = request.form['company']
             location = request.form['location']
-            type_ = request.form['type']        # ABC5, CO26 etc
+            type_ = request.form['type']
 
-            #id = generate_id(company, location, type_)
-
-            #validation inside try
-            if not validate_id(id):
-                return "❌ Invalid ID Format"
-            
             client_name = request.form['client_name']
             address = request.form['address']
             po_number = request.form['po_number']
-            type_ = request.form['type']
-            location = request.form['location']
             expiry = request.form['expiry']
             remarks = request.form['remarks']
 
             conn = get_connection()
             cursor = conn.cursor()
-            #insert    
+
+            # STEP 1: Insert first
             cursor.execute("""
             INSERT INTO extinguishers 
             (client_name, address, po_number, type, location, expiry_date, remarks)
@@ -267,17 +259,16 @@ def add_extinguisher():
 
             serial_number = cursor.fetchone()[0]
 
-            #Generate ID
+            # STEP 2: Generate ID
             serial = str(serial_number).zfill(5)
 
-            id = f"{company}FE{serial}{location.replace(' ','')}{type.replace(' ','')}"
+            id = f"{company}_FE{serial}_{location.replace(' ','')}_{type_.replace(' ','')}"
 
-            #Update ID
+            # STEP 3: Update ID
             cursor.execute("""
             UPDATE extinguishers SET id=%s WHERE serial_number=%s
             """, (id, serial_number))
 
-            #commit
             conn.commit()
             conn.close()
 
@@ -334,27 +325,57 @@ def bulk_upload():
         cursor = conn.cursor()
 
         for index, row in df.iterrows():
-            id = generate_id(
-                row['Company'],
-                row['Location'],
-                row['Type']
-            )
+#            id = generate_id(
+#               row['Company'],
+#                row['Location'],
+#                row['Type']
+#            )
 
+#            cursor.execute("""
+#            INSERT INTO extinguishers 
+#            (id, client_name, address, po_number, type, location, expiry_date, remarks)
+#            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+#            ON CONFLICT (id) DO NOTHING
+#            """, (
+#                id,
+#                row['Client Name'],
+#                row['Address'],
+#                row['PO Number'],
+#                row['Type'],
+#                row['Location'],
+#                str(row['Expiry Date']),
+#                row['Remarks']
+#            ))
+
+        for index, row in df.iterrows():
+
+    # STEP 1: Insert data (without ID)
             cursor.execute("""
-            INSERT INTO extinguishers 
-            (id, client_name, address, po_number, type, location, expiry_date, remarks)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-            ON CONFLICT (id) DO NOTHING
-            """, (
-                id,
-                row['Client Name'],
-                row['Address'],
-                row['PO Number'],
-                row['Type'],
-                row['Location'],
-                str(row['Expiry Date']),
-                row['Remarks']
-            ))
+        INSERT INTO extinguishers 
+        (client_name, address, po_number, type, location, expiry_date, remarks)
+        VALUES (%s,%s,%s,%s,%s,%s,%s)
+        RETURNING serial_number
+        """, (
+            row['Client Name'],
+            row['Address'],
+            row['PO Number'],
+            row['Type'],
+            row['Location'],
+            str(row['Expiry Date']),
+            row['Remarks']
+        ))
+
+        serial_number = cursor.fetchone()[0]
+
+    # STEP 2: Generate ID
+        serial = str(serial_number).zfill(5)
+
+        id = f"{row['Company']}_FE{serial}_{row['Location'].replace(' ','')}_{row['Type'].replace(' ','')}"
+
+    # STEP 3: Update ID
+        cursor.execute("""
+        UPDATE extinguishers SET id=%s WHERE serial_number=%s
+        """, (id, serial_number))
 
         conn.commit()
         conn.close()
@@ -366,16 +387,12 @@ def bulk_upload():
 ##########################################################
 #EDIT ROUTE
 @app.route('/edit/<id>', methods=['GET', 'POST'])
-@role_required('head')   # Only head can edit
+@role_required('head')
 def edit_extinguisher(id):
     conn = get_connection()
     cursor = conn.cursor()
 
-    if request.method == 'POST':       
-        type_ = request.form['type']
-        location = request.form['location']
-        expiry = request.form['expiry']
-
+    if request.method == 'POST':
         cursor.execute("""
         UPDATE extinguishers
         SET client_name=%s, address=%s, po_number=%s, type=%s, location=%s, expiry_date=%s, remarks=%s
@@ -396,13 +413,45 @@ def edit_extinguisher(id):
 
         return redirect(f"/extinguisher/{id}")
 
-    cursor.execute("SELECT * FROM extinguishers WHERE id=%s", (id,))
-    data = cursor.fetchone()
+    # 🔥 Fetch as dictionary (FIX)
+    cursor.execute("""
+    SELECT id, client_name, address, po_number, type, location, expiry_date, remarks
+    FROM extinguishers WHERE id=%s
+    """, (id,))
+
+    row = cursor.fetchone()
+
+    if not row:
+        return "❌ Not found"
+
+    columns = [desc[0] for desc in cursor.description]
+    data = dict(zip(columns, row))
+
     conn.close()
 
     return render_template("edit.html", data=data)
 
+
 ##########################################################
+
+@app.route('/setup-db')
+def setup_db():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("ALTER TABLE extinguishers ADD COLUMN serial_number SERIAL")
+
+    conn.commit()
+    conn.close()
+
+    return "✅ serial_number added successfully"
+
+
+
+##########################################################
+
+
+
 # HEALTH CHECK
 
 @app.route("/check")
