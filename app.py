@@ -174,38 +174,34 @@ def add_extinguisher():
         try:
             conn = get_connection()
             cursor = conn.cursor()
-
-            # INSERT FIRST
+# STEP 1: Get next serial number manually
             cursor.execute("""
-            INSERT INTO extinguishers
-            (client_name, address, po_number, order_id, type, location, expiry_date, remarks)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-            RETURNING serial_number
+            SELECT COALESCE(MAX(serial_number), 0) + 1 FROM extinguishers
+            """)
+            serial_number = cursor.fetchone()[0]
+            
+# STEP 2: Generate ID
+            serial = str(serial_number).zfill(5)
+            
+            id = f"{company}_FE{serial}_{location.replace(' ','')}_{type_.replace(' ','')}"
+            
+# STEP 3: INSERT WITH ID
+            cursor.execute("""
+            INSERT INTO extinguishers 
+            (id, serial_number, client_name, address, po_number, order_id, type, location, expiry_date, remarks)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """, (
-                request.form['client_name'],
-                request.form['address'],
-                request.form['po_number'],
+                id,
+                serial_number,
+                client_name,
+                address,
+                po_number,
                 request.form['order_id'],
-                request.form['type'],
-                request.form['location'],
-                request.form['expiry'],
-                request.form['remarks']
+                type_,
+                location,
+                expiry,
+                remarks
             ))
-
-            serial = cursor.fetchone()[0]
-
-            # GENERATE ID
-            serial_str = str(serial).zfill(5)
-            location = request.form['location'].replace(" ", "")
-            type_ = request.form['type'].replace(" ", "")
-
-            id = f"SM_FE{serial_str}_{location}_{type_}"
-
-            # UPDATE ID
-            cursor.execute(
-                "UPDATE extinguishers SET id=%s WHERE serial_number=%s",
-                (id, serial)
-            )
 
             conn.commit()
             conn.close()
