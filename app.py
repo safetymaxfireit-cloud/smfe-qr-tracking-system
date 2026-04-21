@@ -449,7 +449,20 @@ def setup_db():
 
 ##########################################################
 
+@app.route('/add-columns')
+def add_columns():
+    conn = get_connection()
+    cursor = conn.cursor()
 
+    # Add Order ID column
+    cursor.execute("ALTER TABLE extinguishers ADD COLUMN order_id TEXT")
+
+    conn.commit()
+    conn.close()
+
+    return "✅ Column added successfully"
+
+##########################################################
 
 # HEALTH CHECK
 
