@@ -1,23 +1,125 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Extinguisher Details</title>
+    <title>Fire Extinguisher</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            margin: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .tagline {
+            font-size: 12px;
+            color: #333;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .heading {
+            background: #0d6efd;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        td:first-child {
+            font-weight: bold;
+            width: 45%;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 15px;
+            color: #555;
+        }
+    </style>
 </head>
+
 <body>
-    <h2>Extinguisher Details</h2>
 
-    ID: {{ data.id }}
-    Client: {{ data.client_name }}
-    Address: {{ data.address }}
-    PO Number: {{ data.po_number }}
-    Type: {{ data.type }}
-    Location: {{ data.location }}
-    Expiry: {{ data.expiry_date }}
-    Remarks: {{ data.remarks }}
+<div class="header">
+    <div>
+        <!-- Upload logo later -->
+        <b>SafetyMax Fire Engineers</b>
+    </div>
 
-{% if session['role'] == 'head' %}
-    <a href="/edit/{{ data[0] }}">✏️ Edit</a>
-{% endif %}
+    <div class="title">
+        Fire Extinguisher Management System
+    </div>
+
+    <div class="tagline">
+        Safety Today Security Tomorrow
+    </div>
+</div>
+
+<div class="container">
+    <div class="card">
+
+        <div class="heading">
+            Fire Extinguisher Details ({{ data['id'] }})
+        </div>
+
+        <table>
+            <tr><td>Fire Extinguisher ID</td><td>{{ data['id'] }}</td></tr>
+            <tr><td>Manufacturer</td><td>SafetyMax</td></tr>
+            <tr><td>Type</td><td>{{ data['type'] }}</td></tr>
+            <tr><td>Client</td><td>{{ data['client_name'] }}</td></tr>
+            <tr><td>Address</td><td>{{ data['address'] }}</td></tr>
+            <tr><td>Extinguisher Placed At</td><td>{{ data['location'] }}</td></tr>
+            <tr><td>PO Number</td><td>{{ data['po_number'] }}</td></tr>
+            <tr><td>Order Number</td><td>{{ data['order_id'] }}</td></tr>
+            <tr><td>Supply Date</td><td>{{ data['supply_date'] }}</td></tr>
+            <tr><td>Expiry Date</td><td>{{ data['expiry_date'] }}</td></tr>
+            <tr><td>Remarks</td><td>{{ data['remarks'] }}</td></tr>
+        </table>
+
+    </div>
+
+    <div class="footer">
+        🔥 In case of fire call: 101<br>
+        📞 For queries: +91 9356514043<br><br>
+        SafetyMax Fire Engineers
+    </div>
+</div>
 
 </body>
 </html>
