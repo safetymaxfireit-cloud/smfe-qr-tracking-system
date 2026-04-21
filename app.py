@@ -1,84 +1,61 @@
-from flask import Flask, session, redirect, url_for, request, render_template, Response
+from flask import Flask, session, redirect, request, render_template, Response
 import io
 import qrcode
 import os
-import re
 import psycopg2
 import pandas as pd
-
 from functools import wraps
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user' not in session:
-            return redirect('/login')
-        return f(*args, **kwargs)
-    return decorated_function
-
-def role_required(required_role):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if 'user' not in session:
-                return redirect('/login')
-
-            if session.get('role') != required_role:
-                return "❌ Access Denied"
-
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
-
-#def generate_id(company, location, type_):
-#    conn = get_connection()
-#    cursor = conn.cursor()
-
-    # Get next serial number (latest one)
-#    cursor.execute("SELECT nextval(pg_get_serial_sequence('extinguishers','serial_number'))")
-#   number = cursor.fetchone()[0]
-
-#    conn.commit()
-#   conn.close()
-
-#   serial = str(number).zfill(5)
-
-#   location_clean = location.replace(" ", "")
-#   type_clean = type_.replace(" ", "")
-
-#   return f"{company}FE{serial}{location_clean}_{type_clean}"
-
-#def validate_id(id):
-#    pattern = r"^(SM|CLI)FE\d{4}[A-Za-z]+_(ABC|CLA|ABM|CLM|CO2|DCP|WCO|MFO|KCL|LIO)\d+$"
-#    return re.match(pattern, id)
-
-#Secret Key
+# ================================
+# APP CONFIG
+# ================================
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "fallbacksecret")
 
-#Session Fix (For Render/HTTPS)
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
-# 🔥 DATABASE CONNECTION
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_connection():
     return psycopg2.connect(DATABASE_URL)
 
-##########################################################
-# INIT DATABASE
+# ================================
+# AUTH
+# ================================
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if 'user' not in session:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return wrapper
 
+def role_required(role):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            if session.get('role') != role:
+                return "❌ Access Denied"
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+
+# ================================
+# DATABASE INIT
+# ================================
 def init_db():
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS extinguishers (
-        id TEXT PRIMARY KEY,
+        serial_number SERIAL PRIMARY KEY,
+        id TEXT UNIQUE,
         client_name TEXT,
         address TEXT,
         po_number TEXT,
+        order_id TEXT,
         type TEXT,
         location TEXT,
         expiry_date TEXT,
@@ -91,10 +68,9 @@ def init_db():
 
 init_db()
 
-##########################################################
-
-# USERS TABLE 
-
+# ================================
+# USERS
+# ================================
 def init_users():
     conn = get_connection()
     cursor = conn.cursor()
@@ -102,13 +78,12 @@ def init_users():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        role TEXT NOT NULL
+        username TEXT UNIQUE,
+        password TEXT,
+        role TEXT
     )
     """)
 
-    # Default admin
     cursor.execute("""
     INSERT INTO users (username, password, role)
     VALUES ('admin', 'SMFE@369', 'admin')
@@ -120,154 +95,117 @@ def init_users():
 
 init_users()
 
-###########################################################
-# CREATE USER
-@app.route('/create-user')
-def create_user():
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    INSERT INTO users (username, password, role)
-    VALUES
-    ('creator', 'SMFE@369', 'head')
-    ON CONFLICT (username) DO NOTHING
-    """)
-
-    conn.commit()
-    conn.close()
-
-    return "Users Created"
-
-##########################################################
-# LOGIN ROUTE
-
-@app.route('/login', methods=['GET', 'POST'])
+# ================================
+# LOGIN
+# ================================
+@app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
         conn = get_connection()
         cursor = conn.cursor()
 
         cursor.execute(
             "SELECT * FROM users WHERE username=%s AND password=%s",
-            (username, password)
+            (request.form['username'], request.form['password'])
         )
         user = cursor.fetchone()
-
         conn.close()
 
         if user:
-            session['user'] = username
+            session['user'] = user[1]
             session['role'] = user[3]
             return redirect('/')
-        else:
-            return "❌ Invalid login"
+        return "❌ Invalid Login"
 
     return render_template("login.html")
-
-
-##########################################################
-# LOGOUT ROUTE
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/login')
 
-##########################################################
+# ================================
 # HOME
-
+# ================================
 @app.route('/')
 @login_required
 def index():
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM extinguishers ORDER BY id")
+    cursor.execute("SELECT id, client_name, type FROM extinguishers ORDER BY serial_number DESC")
     data = cursor.fetchall()
 
     conn.close()
+    return render_template("index.html", data=data)
 
-    return render_template('index.html', data=data)
-
-##########################################################
-# VIEW EXTINGUISHER
-
+# ================================
+# VIEW PAGE
+# ================================
 @app.route('/extinguisher/<id>')
-def extinguisher(id):
+def view_extinguisher(id):
+    conn = get_connection()
+    cursor = conn.cursor()
 
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
+    cursor.execute("""
+    SELECT id, client_name, address, po_number, order_id, type, location, expiry_date, remarks
+    FROM extinguishers WHERE id=%s
+    """, (id,))
 
-        cursor.execute("""
-        SELECT id, client_name, address, po_number, type, location, expiry_date, remarks 
-        FROM extinguishers WHERE id=%s
-        """, (id,))
+    row = cursor.fetchone()
 
-        row = cursor.fetchone()
+    if not row:
+        return "❌ Not Found"
 
-        if row is None:
-            return f"❌ No data found for ID: {id}"
+    columns = [desc[0] for desc in cursor.description]
+    data = dict(zip(columns, row))
 
-        # 🔥 Convert to dictionary
-        columns = [desc[0] for desc in cursor.description]
-        data = dict(zip(columns, row))
+    conn.close()
 
+    return render_template("view.html", data=data)
 
-        conn.close()
-
-        if data is None:
-            return f"❌ No data found for ID: {id}"
-
-        return render_template("view.html", data=data)
-
-    except Exception as e:
-        return f"🔥 Error: {str(e)}"
-
-##########################################################
-# ADD + QR GENERATION
-
-@app.route('/add', methods=['GET', 'POST'])
+# ================================
+# ADD
+# ================================
+@app.route('/add', methods=['GET','POST'])
 @login_required
 def add_extinguisher():
     if request.method == 'POST':
         try:
-            company = request.form['company']
-            location = request.form['location']
-            type_ = request.form['type']
-
-            client_name = request.form['client_name']
-            address = request.form['address']
-            po_number = request.form['po_number']
-            expiry = request.form['expiry']
-            remarks = request.form['remarks']
-
             conn = get_connection()
             cursor = conn.cursor()
 
-            # STEP 1: Insert first
+            # INSERT FIRST
             cursor.execute("""
-            INSERT INTO extinguishers 
-            (client_name, address, po_number, type, location, expiry_date, remarks)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO extinguishers
+            (client_name, address, po_number, order_id, type, location, expiry_date, remarks)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
             RETURNING serial_number
-            """, (client_name, address, po_number, type_, location, expiry, remarks))
+            """, (
+                request.form['client_name'],
+                request.form['address'],
+                request.form['po_number'],
+                request.form['order_id'],
+                request.form['type'],
+                request.form['location'],
+                request.form['expiry'],
+                request.form['remarks']
+            ))
 
-            serial_number = cursor.fetchone()[0]
+            serial = cursor.fetchone()[0]
 
-            # STEP 2: Generate ID
-            serial = str(serial_number).zfill(5)
+            # GENERATE ID
+            serial_str = str(serial).zfill(5)
+            location = request.form['location'].replace(" ", "")
+            type_ = request.form['type'].replace(" ", "")
 
-            id = f"{company}_FE{serial}_{location.replace(' ','')}_{type_.replace(' ','')}"
+            id = f"SM_FE{serial_str}_{location}_{type_}"
 
-            # STEP 3: Update ID
-            cursor.execute("""
-            UPDATE extinguishers SET id=%s WHERE serial_number=%s
-            """, (id, serial_number))
+            # UPDATE ID
+            cursor.execute(
+                "UPDATE extinguishers SET id=%s WHERE serial_number=%s",
+                (id, serial)
+            )
 
             conn.commit()
             conn.close()
@@ -279,127 +217,32 @@ def add_extinguisher():
 
     return render_template("add.html")
 
-##########################################################
-# QR GENERATION (DYNAMIC)
-
-@app.route('/qr/<id>')
-def generate_qr(id):
-    base_url = "https://app.safetymaxfire.com"
-    qr_url = f"{base_url}/extinguisher/{id}"
-
-    img = qrcode.make(qr_url)
-
-    buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
-    buffer.seek(0)
-
-    return Response(buffer.getvalue(), mimetype='image/png')
-
-##########################################################
-# PRINT MULTIPLE QR
-
-@app.route('/print_qr')
-@login_required
-def print_qr():
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT id FROM extinguishers ORDER BY id")
-    data = cursor.fetchall()
-
-    conn.close()
-
-    return render_template("print_qr.html", data=data)
-
-##########################################################
-#BULK UPLOAD
-@app.route('/bulk_upload', methods=['GET', 'POST'])
+# ================================
+# EDIT
+# ================================
+@app.route('/edit/<id>', methods=['GET','POST'])
 @role_required('admin')
-def bulk_upload():
-    if request.method == 'POST':
-        file = request.files['file']
-
-        df = pd.read_excel(file)
-
-        conn = get_connection()
-        cursor = conn.cursor()
-
-#        for index, row in df.iterrows():
-#            id = generate_id(
-#               row['Company'],
-#                row['Location'],
-#                row['Type']
-#            )
-
-#            cursor.execute("""
-#            INSERT INTO extinguishers 
-#            (id, client_name, address, po_number, type, location, expiry_date, remarks)
-#            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-#            ON CONFLICT (id) DO NOTHING
-#            """, (
-#                id,
-#                row['Client Name'],
-#                row['Address'],
-#                row['PO Number'],
-#                row['Type'],
-#                row['Location'],
-#                str(row['Expiry Date']),
-#                row['Remarks']
-#            ))
-
-        for index, row in df.iterrows():
-            # STEP 1: Insert data (without ID)
-            cursor.execute("""
-            INSERT INTO extinguishers 
-            (client_name, address, po_number, type, location, expiry_date, remarks)
-            VALUES (%s,%s,%s,%s,%s,%s,%s)
-            RETURNING serial_number
-            """, (
-                row['Client Name'],
-                row['Address'],
-                row['PO Number'],
-                row['Type'],
-                row['Location'],
-                str(row['Expiry Date']),
-                row['Remarks']
-            ))
-
-            serial_number = cursor.fetchone()[0]
-
-            # STEP 2: Generate ID
-            serial = str(serial_number).zfill(5)
-
-            id = f"{row['Company']}_FE{serial}_{row['Location'].replace(' ','')}_{row['Type'].replace(' ','')}"
-
-            # STEP 3: Update ID
-            cursor.execute("""
-            UPDATE extinguishers SET id=%s WHERE serial_number=%s
-            """, (id, serial_number))
-
-        conn.commit()
-        conn.close()
-
-        return "✅ Bulk Upload Successful"
-
-    return render_template("bulk_upload.html")
-
-##########################################################
-#EDIT ROUTE
-@app.route('/edit/<id>', methods=['GET', 'POST'])
-@role_required('head')
 def edit_extinguisher(id):
     conn = get_connection()
     cursor = conn.cursor()
 
     if request.method == 'POST':
         cursor.execute("""
-        UPDATE extinguishers
-        SET client_name=%s, address=%s, po_number=%s, type=%s, location=%s, expiry_date=%s, remarks=%s
+        UPDATE extinguishers SET
+        client_name=%s,
+        address=%s,
+        po_number=%s,
+        order_id=%s,
+        type=%s,
+        location=%s,
+        expiry_date=%s,
+        remarks=%s
         WHERE id=%s
         """, (
             request.form['client_name'],
             request.form['address'],
             request.form['po_number'],
+            request.form['order_id'],
             request.form['type'],
             request.form['location'],
             request.form['expiry'],
@@ -409,68 +252,104 @@ def edit_extinguisher(id):
 
         conn.commit()
         conn.close()
-
         return redirect(f"/extinguisher/{id}")
 
-    # 🔥 Fetch as dictionary (FIX)
-    cursor.execute("""
-    SELECT id, client_name, address, po_number, type, location, expiry_date, remarks
-    FROM extinguishers WHERE id=%s
-    """, (id,))
-
+    cursor.execute("SELECT * FROM extinguishers WHERE id=%s", (id,))
     row = cursor.fetchone()
-
-    if not row:
-        return "❌ Not found"
 
     columns = [desc[0] for desc in cursor.description]
     data = dict(zip(columns, row))
 
     conn.close()
-
     return render_template("edit.html", data=data)
 
+# ================================
+# QR
+# ================================
+@app.route('/qr/<id>')
+def qr(id):
+    url = f"https://app.safetymaxfire.com/extinguisher/{id}"
 
-##########################################################
+    img = qrcode.make(url)
 
-@app.route('/setup-db')
-def setup_db():
-    conn = get_connection()
-    cursor = conn.cursor()
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
 
-    cursor.execute("ALTER TABLE extinguishers ADD COLUMN serial_number SERIAL")
+    return Response(buf.getvalue(), mimetype='image/png')
 
-    conn.commit()
-    conn.close()
+# ================================
+# BULK UPLOAD
+# ================================
+@app.route('/bulk_upload', methods=['GET','POST'])
+@role_required('admin')
+def bulk_upload():
+    if request.method == 'POST':
+        file = request.files['file']
+        df = pd.read_excel(file)
 
-    return "✅ serial_number added successfully"
+        conn = get_connection()
+        cursor = conn.cursor()
 
+        for _, row in df.iterrows():
+            cursor.execute("""
+            INSERT INTO extinguishers
+            (client_name, address, po_number, order_id, type, location, expiry_date, remarks)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+            RETURNING serial_number
+            """, (
+                row['Client Name'],
+                row['Address'],
+                row['PO Number'],
+                row['Order ID'],
+                row['Type'],
+                row['Location'],
+                str(row['Expiry Date']),
+                row['Remarks']
+            ))
 
+            serial = cursor.fetchone()[0]
+            serial_str = str(serial).zfill(5)
 
-##########################################################
+            id = f"SM_FE{serial_str}_{row['Location'].replace(' ','')}_{row['Type'].replace(' ','')}"
 
-@app.route('/add-columns')
-def add_columns():
-    conn = get_connection()
-    cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE extinguishers SET id=%s WHERE serial_number=%s",
+                (id, serial)
+            )
 
-    # Add Order ID column
-    cursor.execute("ALTER TABLE extinguishers ADD COLUMN order_id TEXT")
+        conn.commit()
+        conn.close()
 
-    conn.commit()
-    conn.close()
+        return "✅ Bulk Upload Done"
 
-    return "✅ Column added successfully"
+    return render_template("bulk_upload.html")
 
-##########################################################
+# ================================
+@app.route('/add-order-column')
+def add_order_column():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-# HEALTH CHECK
+        cursor.execute("""
+        ALTER TABLE extinguishers 
+        ADD COLUMN order_id TEXT;
+        """)
 
-@app.route("/check")
+        conn.commit()
+        conn.close()
+
+        return "✅ order_id column added successfully"
+
+    except Exception as e:
+        return f"🔥 Error: {str(e)}"
+
+# ================================
+@app.route('/check')
 def check():
-    return "App is running ✅"
+    return "✅ Running"
 
-##########################################################
-
-if __name__ == '__main__':
+# ================================
+if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
