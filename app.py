@@ -324,7 +324,7 @@ def bulk_upload():
         conn = get_connection()
         cursor = conn.cursor()
 
-        for index, row in df.iterrows():
+#        for index, row in df.iterrows():
 #            id = generate_id(
 #               row['Company'],
 #                row['Location'],
@@ -348,7 +348,7 @@ def bulk_upload():
 #            ))
 
         for index, row in df.iterrows():
-    # STEP 1: Insert data (without ID)
+            # STEP 1: Insert data (without ID)
             cursor.execute("""
             INSERT INTO extinguishers 
             (client_name, address, po_number, type, location, expiry_date, remarks)
@@ -366,12 +366,12 @@ def bulk_upload():
 
             serial_number = cursor.fetchone()[0]
 
-    # STEP 2: Generate ID
+            # STEP 2: Generate ID
             serial = str(serial_number).zfill(5)
 
             id = f"{row['Company']}_FE{serial}_{row['Location'].replace(' ','')}_{row['Type'].replace(' ','')}"
 
-    # STEP 3: Update ID
+            # STEP 3: Update ID
             cursor.execute("""
             UPDATE extinguishers SET id=%s WHERE serial_number=%s
             """, (id, serial_number))
