@@ -302,92 +302,74 @@ def single_qr(id):
 # ================================
 # LABEL
 # ================================
-
-
 from PIL import Image, ImageDraw, ImageFont
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FONT_PATH = os.path.join(BASE_DIR, "static", "fonts", "0222.ttf")
-try:
-    default_font = ImageFont.truetype(font_path, 26)
-except:
-    default_font = ImageFont.load_default()
 
 @app.route('/label/<id>')
 @login_required
 def label(id):
-    from PIL import Image, ImageDraw, ImageFont
 
     qr_url = f"https://app.safetymaxfire.com/extinguisher/{id}"
 
-    # =========================
-    # 📐 PERFECT 50mm x 30mm @ 300 DPI
-    # =========================
     DPI = 300
     WIDTH = int(50 * DPI / 25.4)   # 590 px
     HEIGHT = int(30 * DPI / 25.4)  # 354 px
 
-    QR_SIZE = 230   # reduced to make space for ID
+    QR_SIZE = 240
 
-    # =========================
-    # 🔳 CREATE QR
-    # =========================
+    # QR
     qr = qrcode.make(qr_url)
     qr = qr.resize((QR_SIZE, QR_SIZE))
 
-    # =========================
-    # 🧱 CANVAS
-    # =========================
+    # Canvas
     canvas = Image.new("RGB", (WIDTH, HEIGHT), "white")
     draw = ImageDraw.Draw(canvas)
 
-    # =========================
-    # 🔤 FONTS (FIXED SIZES)
-    # =========================
+    # ✅ LOAD FONT PROPERLY
     try:
-        title_font = ImageFont.truetype("static/fonts/0222.ttf", 48)   # BIGGER
-        subtitle_font = ImageFont.truetype("static/fonts/0222.ttf", 28) # tighter
-        id_font = ImageFont.truetype("arial.ttf", 24)
-    except:
+        title_font = ImageFont.truetype(FONT_PATH, 52)
+        subtitle_font = ImageFont.truetype(FONT_PATH, 30)
+        id_font = ImageFont.truetype(FONT_PATH, 24)
+    except Exception as e:
+        print("Font load error:", e)
         title_font = ImageFont.load_default()
         subtitle_font = ImageFont.load_default()
         id_font = ImageFont.load_default()
 
     # =========================
-    # 🔴 TOP: COMPANY NAME (FIXED SPACING)
+    # TOP TEXT (FIXED SPACING)
     # =========================
-    draw.text((WIDTH//2, 10), "SAFETYMAX", fill="black", anchor="ma", font=title_font)
+    draw.text((WIDTH//2, 8), "SAFETYMAX", fill="black", anchor="ma", font=title_font)
 
-    draw.text((WIDTH//2, 50), "FIRE ENGINEERS", fill="black", anchor="ma", font=subtitle_font)
+    draw.text((WIDTH//2, 48), "FIRE ENGINEERS", fill="black", anchor="ma", font=subtitle_font)
 
     # =========================
-    # 🔳 CENTER: QR (BALANCED)
+    # QR POSITION (CENTERED)
     # =========================
     qr_x = (WIDTH - QR_SIZE) // 2
-    qr_y = 90   # slightly higher
+    qr_y = 80
 
     canvas.paste(qr, (qr_x, qr_y))
 
     # =========================
-    # 🔵 BOTTOM: ID (VISIBLE FIX)
+    # ID (VISIBLE FIX)
     # =========================
     draw.text(
-        (WIDTH//2, HEIGHT - 25),
+        (WIDTH//2, HEIGHT - 20),
         id,
         fill="black",
         anchor="ma",
         font=id_font
     )
 
-    # =========================
-    # 📦 EXPORT
-    # =========================
+    # EXPORT
     buf = io.BytesIO()
     canvas.save(buf, format="PNG", dpi=(300,300))
     buf.seek(0)
 
     return Response(buf.getvalue(), mimetype='image/png')
-
 # ================================
 # PRINT QR LABELS
 # ================================
