@@ -203,14 +203,14 @@ def add_extinguisher():
             cursor.execute("""
             INSERT INTO extinguishers 
             (id, serial_number, client_name, address, po_number, order_id, type, location, supply_date, expiry_date, remarks)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """, (
                 id,
                 serial_number,
                 client_name,
                 address,
                 po_number,
-                request.form['order_id'],
+                order_id,
                 type_,
                 location,
                 supply_date,
