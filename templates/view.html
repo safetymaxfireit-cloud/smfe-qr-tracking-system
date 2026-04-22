@@ -166,9 +166,9 @@
     <div class="info-row"><div class="info-label">Supply Date</div><div class="info-val">{{ data['supply_date'] }}</div></div>
     <div class="info-row">
       <div class="info-label">Expiry Date</div>
-      <div class="info-val {% if data['expiry_date'] < today %}expired{% else %}valid{% endif %}">
+      <div class="info-val {% if expiry_date < today %}expired{% else %}valid{% endif %}">
         {{ data['expiry_date'] }}
-        {% if data['expiry_date'] < today %}&mdash; Expired{% else %}&mdash; Valid{% endif %}
+        {% if expiry_date < today %}&mdash; Expired{% else %}&mdash; Valid{% endif %}
       </div>
     </div>
     <div class="info-row"><div class="info-label">Remarks</div><div class="info-val">{{ data['remarks'] }}</div></div>
