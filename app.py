@@ -221,7 +221,7 @@ def add_extinguisher():
             conn.commit()
             conn.close()
 
-            return render_template("qr.html", id=id)
+            return redirect("/print_qr")
 
         except Exception as e:
             return f"🔥 Error: {str(e)}"
@@ -290,6 +290,23 @@ def qr(id):
     buf.seek(0)
 
     return Response(buf.getvalue(), mimetype='image/png')
+
+# ================================
+# PRINT QR LABELS
+# ================================
+@app.route('/print_qr')
+@login_required
+def print_qr():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT id FROM extinguishers ORDER BY serial_number DESC")
+    data = cursor.fetchall()
+
+    conn.close()
+
+    return render_template("print_qr.html", data=data)
+
 
 # ================================
 # BULK UPLOAD
