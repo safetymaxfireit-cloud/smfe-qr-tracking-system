@@ -20,6 +20,9 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 def get_connection():
     return psycopg2.connect(DATABASE_URL)
 
+font_path = os.path.join("static", "fonts", "0222.ttf")
+ImageFont.truetype(font_path, 26)
+
 # ================================
 # AUTH
 # ================================
