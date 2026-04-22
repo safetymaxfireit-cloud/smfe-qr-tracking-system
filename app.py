@@ -20,9 +20,6 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 def get_connection():
     return psycopg2.connect(DATABASE_URL)
 
-font_path = os.path.join("static", "fonts", "0222.ttf")
-ImageFont.truetype(font_path, 26)
-
 # ================================
 # AUTH
 # ================================
@@ -309,6 +306,12 @@ def single_qr(id):
 
 from PIL import Image, ImageDraw, ImageFont
 
+font_path = os.path.join("static", "fonts", "0222.ttf")
+try:
+    default_font = ImageFont.truetype(font_path, 26)
+except:
+    default_font = ImageFont.load_default()
+
 @app.route('/label/<id>')
 @login_required
 def label(id):
@@ -317,7 +320,7 @@ def label(id):
     # --- SETTINGS ---
     WIDTH = 400   # 50mm
     HEIGHT = 240  # 30mm
-    QR_SIZE = 150
+    QR_SIZE = 160
 
     # Create QR
     qr = qrcode.make(qr_url)
@@ -331,7 +334,7 @@ def label(id):
     try:
         title_font = ImageFont.truetype("static/fonts/0222.ttf", 26)
         small_font = ImageFont.truetype("static/fonts/0222.ttf", 18)
-        id_font = ImageFont.truetype("cambria.ttf", 14)
+        id_font = ImageFont.truetype("arial.ttf", 14)
     except:
         title_font = ImageFont.load_default()
         small_font = ImageFont.load_default()
@@ -352,14 +355,14 @@ def label(id):
         "FIRE ENGINEERS",
         fill="black",
         anchor="ma",
-        font=subtitle_font
+        font=small_font
     )
 
     # =========================
     # 🔳 CENTER: QR
     # =========================
     qr_x = (WIDTH - QR_SIZE) // 2
-    qr_y = 60
+    qr_y = 55
 
     canvas.paste(qr, (qr_x, qr_y))
 
