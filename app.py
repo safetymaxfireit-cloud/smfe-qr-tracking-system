@@ -338,13 +338,10 @@ def label(id):
     # =========================
     # 🔤 FONTS (Adjusted)
     # =========================
-    BASE_DIR = os.path.dirname(os.path.abspath(_file_))
-    FONT_PATH = os.path.join(BASE_DIR, "static", "fonts", "0222.ttf")
-
     try:
         title_font = ImageFont.truetype(FONT_PATH, 38)   # slightly smaller
         subtitle_font = ImageFont.truetype(FONT_PATH, 22)
-        id_font = ImageFont.truetype("arial.ttf", 20)    # clean readable
+        id_font = ImageFont.load_default()    # clean readable
     except:
         title_font = ImageFont.load_default()
         subtitle_font = ImageFont.load_default()
@@ -381,7 +378,7 @@ def label(id):
     # 🔵 ID (VISIBLE + CLEAN)
     # =========================
     draw.text(
-        (WIDTH//2, HEIGHT - 20),   # safe margin (no cutting)
+        (WIDTH//2, HEIGHT - 35),   # safe margin (no cutting)
         id,
         fill="black",
         anchor="ma",
