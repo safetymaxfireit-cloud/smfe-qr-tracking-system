@@ -321,27 +321,6 @@ def bulk_upload():
 
     return render_template("bulk_upload.html")
 
-# ================================ 
-
-@app.route('/add-serial-column')
-def add_serial_column():
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-        ALTER TABLE extinguishers 
-        ADD COLUMN IF NOT EXISTS serial_number INTEGER;
-        """)
-
-        conn.commit()
-        conn.close()
-
-        return "✅ serial_number column added successfully"
-
-    except Exception as e:
-        return f"🔥 Error: {str(e)}"
-
 # ================================
 @app.route('/check')
 def check():
