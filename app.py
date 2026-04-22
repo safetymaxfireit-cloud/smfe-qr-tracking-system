@@ -326,8 +326,9 @@ def label(id):
 
     # Fonts
     try:
-        title_font = ImageFont.truetype("arial.ttf", 18)
-        small_font = ImageFont.truetype("arial.ttf", 14)
+        title_font = ImageFont.truetype("static/fonts/0222.ttf", 26)
+        small_font = ImageFont.truetype("static/fonts/0222.ttf", 18)
+        id_font = ImageFont.truetype("cambria.ttf", 14)
     except:
         title_font = ImageFont.load_default()
         small_font = ImageFont.load_default()
@@ -336,7 +337,7 @@ def label(id):
     # 🔴 TOP: COMPANY NAME
     # =========================
     draw.text(
-        (WIDTH//2, 10),
+        (WIDTH//2, 8),
         "SAFETYMAX",
         fill="black",
         anchor="ma",
@@ -344,18 +345,18 @@ def label(id):
     )
 
     draw.text(
-        (WIDTH//2, 30),
+        (WIDTH//2, 32),
         "FIRE ENGINEERS",
         fill="black",
         anchor="ma",
-        font=small_font
+        font=subtitle_font
     )
 
     # =========================
     # 🔳 CENTER: QR
     # =========================
     qr_x = (WIDTH - QR_SIZE) // 2
-    qr_y = 55
+    qr_y = 60
 
     canvas.paste(qr, (qr_x, qr_y))
 
