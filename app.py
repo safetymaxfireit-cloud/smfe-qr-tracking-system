@@ -306,7 +306,7 @@ def single_qr(id):
 
 from PIL import Image, ImageDraw, ImageFont
 
-BASE_DIR = os.path.dirname(os.path.abspath(_file_))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 FONT_PATH = os.path.join(BASE_DIR, "static", "fonts", "0222.ttf")
 try:
     default_font = ImageFont.truetype(font_path, 26)
