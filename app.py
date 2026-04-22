@@ -143,7 +143,23 @@ def index():
 # ================================
 # VIEW PAGE
 # ================================
+
+from datetime import datetime
+
 @app.route('/extinguisher/<id>')
+def extinguisher(id):
+    data = get_data_from_db(id)
+
+    today = datetime.today().date()
+    expiry_date = datetime.strptime(data['expiry_date'], "%Y-%m-%d").date()
+
+    return render_template(
+        "template.html",
+        data=data,
+        today=today,
+        expiry_date=expiry_date
+    )
+    
 def view_extinguisher(id):
     conn = get_connection()
     cursor = conn.cursor()
