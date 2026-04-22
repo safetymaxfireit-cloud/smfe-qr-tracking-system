@@ -58,6 +58,7 @@ def init_db():
         order_id TEXT,
         type TEXT,
         location TEXT,
+        supply_date TEXT,
         expiry_date TEXT,
         remarks TEXT
     )
@@ -148,7 +149,7 @@ def view_extinguisher(id):
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT id, client_name, address, po_number, order_id, type, location, expiry_date, remarks
+    SELECT id, client_name, address, po_number, order_id, type, location, supply_date, expiry_date, remarks
     FROM extinguishers WHERE id=%s
     """, (id,))
 
@@ -181,6 +182,7 @@ def add_extinguisher():
             address = request.form['address']
             po_number = request.form['po_number']
             order_id = request.form['order_id']
+            supply_date = request.form['supply_date']
             expiry = request.form['expiry']
             remarks = request.form['remarks']
         
@@ -200,7 +202,7 @@ def add_extinguisher():
 # STEP 3: INSERT WITH ID
             cursor.execute("""
             INSERT INTO extinguishers 
-            (id, serial_number, client_name, address, po_number, order_id, type, location, expiry_date, remarks)
+            (id, serial_number, client_name, address, po_number, order_id, type, location, supply_date, expiry_date, remarks)
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """, (
                 id,
@@ -211,6 +213,7 @@ def add_extinguisher():
                 request.form['order_id'],
                 type_,
                 location,
+                supply_date,
                 expiry,
                 remarks
             ))
@@ -243,6 +246,7 @@ def edit_extinguisher(id):
         order_id=%s,
         type=%s,
         location=%s,
+        supply_date=%s,
         expiry_date=%s,
         remarks=%s
         WHERE id=%s
@@ -253,6 +257,7 @@ def edit_extinguisher(id):
             request.form['order_id'],
             request.form['type'],
             request.form['location'],
+            request.form['supply_date'],
             request.form['expiry'],
             request.form['remarks'],
             id
@@ -302,7 +307,7 @@ def bulk_upload():
         for _, row in df.iterrows():
             cursor.execute("""
             INSERT INTO extinguishers
-            (client_name, address, po_number, order_id, type, location, expiry_date, remarks)
+            (client_name, address, po_number, order_id, type, location, supply_date, expiry_date, remarks)
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
             RETURNING serial_number
             """, (
@@ -312,6 +317,7 @@ def bulk_upload():
                 row['Order ID'],
                 row['Type'],
                 row['Location'],
+                str(row['Supply Date']),
                 str(row['Expiry Date']),
                 row['Remarks']
             ))
@@ -332,28 +338,7 @@ def bulk_upload():
         return "✅ Bulk Upload Done"
 
     return render_template("bulk_upload.html")
-############################################
-
-@app.route('/add-supply-date-column')
-def add_supply_date():
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-        ALTER TABLE extinguishers 
-        ADD COLUMN IF NOT EXISTS supply_date TEXT;
-        """)
-
-        conn.commit()
-        conn.close()
-
-        return "✅ supply_date added"
-
-    except Exception as e:
-        return f"🔥 Error: {str(e)}"
-
-
+    
 # ================================
 @app.route('/check')
 def check():
