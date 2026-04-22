@@ -137,8 +137,8 @@
         <div class="status-dot"></div>
         <div class="status-label">Active &mdash; Registered Unit</div>
       </div>
-      <div class="unit-id-text">{{ data['id'] }}</div>
-      <div class="unit-type-text">{{ data['type'] }} &nbsp;&bull;&nbsp; {{ data['location'] }}</div>
+      <div class="unit-id-text">{{ data.get('id', '-') }}</div>
+      <div class="unit-type-text">{{ data['type'] }} &nbsp;&bull;&nbsp; {{ data.get('location', '-') }}</div>
     </div>
   </div>
 </div>
@@ -147,31 +147,31 @@
 
   <div class="section-head">Unit Information</div>
   <div class="info-card">
-    <div class="info-row"><div class="info-label">ID</div><div class="info-val highlight">{{ data['id'] }}</div></div>
+    <div class="info-row"><div class="info-label">ID</div><div class="info-val highlight">{{ data.get('id', '-') }}</div></div>
     <div class="info-row"><div class="info-label">Manufacturer</div><div class="info-val"><span class="mfr-badge">SafetyMax</span></div></div>
-    <div class="info-row"><div class="info-label">Type</div><div class="info-val">{{ data['type'] }}</div></div>
-    <div class="info-row"><div class="info-label">Location</div><div class="info-val">{{ data['location'] }}</div></div>
+    <div class="info-row"><div class="info-label">Type</div><div class="info-val">{{ data.get('type', '-') }}</div></div>
+    <div class="info-row"><div class="info-label">Location</div><div class="info-val">{{ data.get('location', '-') }}</div></div>
   </div>
 
   <div class="section-head">Client Details</div>
   <div class="info-card">
-    <div class="info-row"><div class="info-label">Client</div><div class="info-val">{{ data['client_name'] }}</div></div>
-    <div class="info-row"><div class="info-label">Address</div><div class="info-val">{{ data['address'] }}</div></div>
-    <div class="info-row"><div class="info-label">PO Number</div><div class="info-val">{{ data['po_number'] }}</div></div>
-    <div class="info-row"><div class="info-label">Order ID</div><div class="info-val">{{ data['order_id'] }}</div></div>
+    <div class="info-row"><div class="info-label">Client</div><div class="info-val">{{ data.get('client_name', '-') }}</div></div>
+    <div class="info-row"><div class="info-label">Address</div><div class="info-val">{{ data.get('address', '-') }}</div></div>
+    <div class="info-row"><div class="info-label">PO Number</div><div class="info-val">{{ data.get('po_number', '-') }}</div></div>
+    <div class="info-row"><div class="info-label">Order ID</div><div class="info-val">{{ data.get('order_id', '-') }}</div></div>
   </div>
 
   <div class="section-head">Service Dates</div>
   <div class="info-card">
-    <div class="info-row"><div class="info-label">Supply Date</div><div class="info-val">{{ data['supply_date'] }}</div></div>
+    <div class="info-row"><div class="info-label">Supply Date</div><div class="info-val">{{ data.get('supply_date', '-') }}</div></div>
     <div class="info-row">
       <div class="info-label">Expiry Date</div>
       <div class="info-val {% if expiry_date < today %}expired{% else %}valid{% endif %}">
-        {{ data['expiry_date'] }}
+        {{ data.get('expiry_date', '-') }}
         {% if expiry_date < today %}&mdash; Expired{% else %}&mdash; Valid{% endif %}
       </div>
     </div>
-    <div class="info-row"><div class="info-label">Remarks</div><div class="info-val">{{ data['remarks'] }}</div></div>
+    <div class="info-row"><div class="info-label">Remarks</div><div class="info-val">{{ data.get('remarks', '-') }}</div></div>
   </div>
 
   <div class="emergency-card">
