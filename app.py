@@ -70,6 +70,30 @@ def init_db():
 init_db()
 
 # ================================
+# GET DATABASE
+# ================================
+def get_data_from_db(id):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT id, client_name, address, po_number, order_id, type, location, supply_date, expiry_date, remarks
+    FROM extinguishers WHERE id=%s
+    """, (id,))
+
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        return None
+
+    columns = [desc[0] for desc in cursor.description]
+    data = dict(zip(columns, row))
+
+    conn.close()
+    return data
+
+# ================================
 # USERS
 # ================================
 def init_users():
@@ -149,9 +173,19 @@ from datetime import datetime
 @app.route('/extinguisher/<id>')
 def extinguisher(id):
     data = get_data_from_db(id)
-
+    
+    if not data:
+        return "❌ Not Found"
+    
+    from datetime import datetime
     today = datetime.today().date()
-    expiry_date = datetime.strptime(data['expiry_date'], "%Y-%m-%d").date()
+
+    expiry_date = None
+    if data.get('expiry_date'):
+        try:
+            expiry_date = datetime.strptime(data['expiry_date'], "%Y-%m-%d").date()
+        except:
+            expiry_date = None
 
     return render_template(
         "template.html",
