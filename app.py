@@ -172,6 +172,18 @@ def view_extinguisher(id):
 def add_extinguisher():
     if request.method == 'POST':
         try:
+        # ✅ GET FORM DATA FIRST
+            company = request.form['company']
+            location = request.form['location']
+            type_ = request.form['type']
+
+            client_name = request.form['client_name']
+            address = request.form['address']
+            po_number = request.form['po_number']
+            order_id = request.form['order_id']
+            expiry = request.form['expiry']
+            remarks = request.form['remarks']
+        
             conn = get_connection()
             cursor = conn.cursor()
 # STEP 1: Get next serial number manually
@@ -183,7 +195,7 @@ def add_extinguisher():
 # STEP 2: Generate ID
             serial = str(serial_number).zfill(5)
             
-            id = f"{company}_FE{serial}_{location.replace(' ','')}_{type_.replace(' ','')}"
+            id = f"{company}_FE{serial}_{location.titel().replace(' ','')}_{type_.replace(' ','')}"
             
 # STEP 3: INSERT WITH ID
             cursor.execute("""
