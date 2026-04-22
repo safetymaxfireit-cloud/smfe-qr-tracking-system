@@ -302,18 +302,37 @@ def single_qr(id):
 # ================================
 # PRINT QR LABELS
 # ================================
-@app.route('/print_qr')
+@app.route('/print_qr', methods=['GET', 'POST'])
 @login_required
 def print_qr():
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT id FROM extinguishers ORDER BY serial_number DESC")
-    data = cursor.fetchall()
+    # Get all clients for dropdown
+    cursor.execute("SELECT DISTINCT client_name FROM extinguishers ORDER BY client_name")
+    clients = [row[0] for row in cursor.fetchall()]
 
+    selected_client = request.args.get('client')
+
+    if selected_client:
+        cursor.execute(
+            "SELECT id FROM extinguishers WHERE client_name=%s ORDER BY serial_number DESC",
+            (selected_client,)
+        )
+    else:
+        cursor.execute(
+            "SELECT id FROM extinguishers ORDER BY serial_number DESC"
+        )
+
+    data = cursor.fetchall()
     conn.close()
 
-    return render_template("print_qr.html", data=data)
+    return render_template(
+        "print_qr.html",
+        data=data,
+        clients=clients,
+        selected_client=selected_client
+    )
 
 
 # ================================
