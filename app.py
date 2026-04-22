@@ -330,8 +330,8 @@ def label(id):
         small_font = ImageFont.load_default()
 
     # 🔴 Company Name (top)
-    draw.text((width//2, 10), "SAFETYMAX", fill="black", anchor="ma", font=title_font)
-    draw.text((width//2, 40), "FIRE ENGINEERS", fill="black", anchor="ma", font=small_font)
+    draw.text((width//7, 10), "SAFETYMAX", fill="black", anchor="ma", font=title_font)
+    draw.text((width//7, 40), "FIRE ENGINEERS", fill="black", anchor="ma", font=small_font)
 
     # 🔳 Paste QR (center)
     qr_x = (width - 220) // 2
@@ -339,7 +339,7 @@ def label(id):
     canvas.paste(qr, (qr_x, qr_y))
 
     # 🔵 ID at bottom
-    draw.text((width//2, height-30), f"ID: {id}", fill="black", anchor="ma", font=small_font)
+    <br><br>draw.text((width//2, height-30), f"ID: {id}", fill="black", anchor="ma", font=small_font)
 
     # Convert to response
     buf = io.BytesIO()
