@@ -337,9 +337,12 @@ def label(id):
     qr_x = (width - 220) // 2
     qr_y = 70
     canvas.paste(qr, (qr_x, qr_y))
+    
+#Add space below
+    id_y = qr_y + 220 + 15
 
     # 🔵 ID at bottom
-    <br><br>draw.text((width//2, height-30), f"ID: {id}", fill="black", anchor="ma", font=small_font)
+    draw.text((width//2, height-30), f"ID: {id}", fill="black", anchor="ma", font=small_font)
 
     # Convert to response
     buf = io.BytesIO()
