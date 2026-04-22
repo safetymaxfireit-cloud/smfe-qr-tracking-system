@@ -311,42 +311,72 @@ from PIL import Image, ImageDraw, ImageFont
 def label(id):
     qr_url = f"https://app.safetymaxfire.com/extinguisher/{id}"
 
+    # --- SETTINGS ---
+    WIDTH = 400   # 50mm
+    HEIGHT = 240  # 30mm
+    QR_SIZE = 150
+
     # Create QR
     qr = qrcode.make(qr_url)
-    qr = qr.resize((220, 220))  # BIG QR
+    qr = qr.resize((QR_SIZE, QR_SIZE))
 
-    # Create label canvas (5:3 ratio)
-    width, height = 500, 300
-    canvas = Image.new("RGB", (width, height), "white")
-
+    # Canvas
+    canvas = Image.new("RGB", (WIDTH, HEIGHT), "white")
     draw = ImageDraw.Draw(canvas)
 
-    # Fonts (use default if font file not available)
+    # Fonts
     try:
-        title_font = ImageFont.truetype("arial.ttf", 28)
-        small_font = ImageFont.truetype("arial.ttf", 18)
+        title_font = ImageFont.truetype("arial.ttf", 18)
+        small_font = ImageFont.truetype("arial.ttf", 14)
     except:
         title_font = ImageFont.load_default()
         small_font = ImageFont.load_default()
 
-    # 🔴 Company Name (top)
-    draw.text((width//7, 10), "SAFETYMAX", fill="black", anchor="ma", font=title_font)
-    draw.text((width//7, 40), "FIRE ENGINEERS", fill="black", anchor="ma", font=small_font)
+    # =========================
+    # 🔴 TOP: COMPANY NAME
+    # =========================
+    draw.text(
+        (WIDTH//2, 10),
+        "SAFETYMAX",
+        fill="black",
+        anchor="ma",
+        font=title_font
+    )
 
-    # 🔳 Paste QR (center)
-    qr_x = (width - 220) // 2
-    qr_y = 70
+    draw.text(
+        (WIDTH//2, 30),
+        "FIRE ENGINEERS",
+        fill="black",
+        anchor="ma",
+        font=small_font
+    )
+
+    # =========================
+    # 🔳 CENTER: QR
+    # =========================
+    qr_x = (WIDTH - QR_SIZE) // 2
+    qr_y = 55
+
     canvas.paste(qr, (qr_x, qr_y))
-    
-#Add space below
-    id_y = qr_y + 220 + 15
 
-    # 🔵 ID at bottom
-    draw.text((width//2, height-30), f"ID: {id}", fill="black", anchor="ma", font=small_font)
+    # =========================
+    # 🔵 BOTTOM: ID
+    # =========================
+    id_y = qr_y + QR_SIZE + 8
 
-    # Convert to response
+    draw.text(
+        (WIDTH//2, id_y),
+        f"{id}",
+        fill="black",
+        anchor="ma",
+        font=small_font
+    )
+
+    # =========================
+    # EXPORT
+    # =========================
     buf = io.BytesIO()
-    canvas.save(buf, format="PNG")
+    canvas.save(buf, format="PNG", dpi=(203,203))
     buf.seek(0)
 
     return Response(buf.getvalue(), mimetype='image/png')
