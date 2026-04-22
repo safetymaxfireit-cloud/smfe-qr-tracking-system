@@ -138,7 +138,7 @@
         <div class="status-label">Active &mdash; Registered Unit</div>
       </div>
       <div class="unit-id-text">{{ data.get('id', '-') }}</div>
-      <div class="unit-type-text">{{ data['type'] }} &nbsp;&bull;&nbsp; {{ data.get('location', '-') }}</div>
+      <div class="unit-type-text">{{ data.get('type', '-') }} &nbsp;&bull;&nbsp; {{ data.get('location', '-') }}</div>
     </div>
   </div>
 </div>
@@ -166,9 +166,9 @@
     <div class="info-row"><div class="info-label">Supply Date</div><div class="info-val">{{ data.get('supply_date', '-') }}</div></div>
     <div class="info-row">
       <div class="info-label">Expiry Date</div>
-      <div class="info-val {% if expiry_date < today %}expired{% else %}valid{% endif %}">
+      <div class="info-val {% if expiry_date and expiry_date < today %}expired{% else %}valid{% endif %}">
         {{ data.get('expiry_date', '-') }}
-        {% if expiry_date < today %}&mdash; Expired{% else %}&mdash; Valid{% endif %}
+        {% if expiry_date and expiry_date < today %}&mdash; Expired{% else %}&mdash; Valid{% endif %}
       </div>
     </div>
     <div class="info-row"><div class="info-label">Remarks</div><div class="info-val">{{ data.get('remarks', '-') }}</div></div>
