@@ -188,7 +188,7 @@ def extinguisher(id):
             expiry_date = None
 
     return render_template(
-        "template.html",
+        "view.html",
         data=data,
         today=today,
         expiry_date=expiry_date
