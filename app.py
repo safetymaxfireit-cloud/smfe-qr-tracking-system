@@ -300,6 +300,55 @@ def single_qr(id):
     return render_template("single_qr.html", id=id)
 
 # ================================
+# LABEL
+# ================================
+
+
+from PIL import Image, ImageDraw, ImageFont
+
+@app.route('/label/<id>')
+@login_required
+def label(id):
+    qr_url = f"https://app.safetymaxfire.com/extinguisher/{id}"
+
+    # Create QR
+    qr = qrcode.make(qr_url)
+    qr = qr.resize((220, 220))  # BIG QR
+
+    # Create label canvas (5:3 ratio)
+    width, height = 500, 300
+    canvas = Image.new("RGB", (width, height), "white")
+
+    draw = ImageDraw.Draw(canvas)
+
+    # Fonts (use default if font file not available)
+    try:
+        title_font = ImageFont.truetype("arial.ttf", 28)
+        small_font = ImageFont.truetype("arial.ttf", 18)
+    except:
+        title_font = ImageFont.load_default()
+        small_font = ImageFont.load_default()
+
+    # 🔴 Company Name (top)
+    draw.text((width//2, 10), "SAFETYMAX", fill="black", anchor="ma", font=title_font)
+    draw.text((width//2, 40), "FIRE ENGINEERS", fill="black", anchor="ma", font=small_font)
+
+    # 🔳 Paste QR (center)
+    qr_x = (width - 220) // 2
+    qr_y = 70
+    canvas.paste(qr, (qr_x, qr_y))
+
+    # 🔵 ID at bottom
+    draw.text((width//2, height-30), f"ID: {id}", fill="black", anchor="ma", font=small_font)
+
+    # Convert to response
+    buf = io.BytesIO()
+    canvas.save(buf, format="PNG")
+    buf.seek(0)
+
+    return Response(buf.getvalue(), mimetype='image/png')
+
+# ================================
 # PRINT QR LABELS
 # ================================
 @app.route('/print_qr', methods=['GET', 'POST'])
