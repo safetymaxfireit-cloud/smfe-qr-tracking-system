@@ -195,7 +195,7 @@ def add_extinguisher():
 # STEP 2: Generate ID
             serial = str(serial_number).zfill(5)
             
-            id = f"{company}_FE{serial}_{location.titel().replace(' ','')}_{type_.replace(' ','')}"
+            id = f"{company}_FE{serial}_{location.title().replace(' ','')}_{type_.replace(' ','')}"
             
 # STEP 3: INSERT WITH ID
             cursor.execute("""
@@ -276,7 +276,7 @@ def edit_extinguisher(id):
 # ================================
 @app.route('/qr/<id>')
 def qr(id):
-    url = f"https://app.safetymaxfire.com/extinguisher/{id}"
+    qr_url = f"https://app.safetymaxfire.com/extinguisher/{id}"
 
     img = qrcode.make(qr_url, box_size=3, border=2)
 
