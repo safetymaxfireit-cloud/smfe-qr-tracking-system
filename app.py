@@ -438,6 +438,9 @@ def label(id):
     # =========================
     # 📦 EXPORT
     # =========================
+    # 🔄 Rotate LEFT (90° anti-clockwise)
+    canvas = canvas.rotate(90, expand=True)
+    
     buf = io.BytesIO()
     canvas.save(buf, format="PNG", dpi=(300,300))
     buf.seek(0)
