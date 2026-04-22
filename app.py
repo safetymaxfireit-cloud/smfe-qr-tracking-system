@@ -221,7 +221,7 @@ def add_extinguisher():
             conn.commit()
             conn.close()
 
-            return redirect("/print_qr")
+            return redirect(f"/single_qr/{id}")
 
         except Exception as e:
             return f"🔥 Error: {str(e)}"
@@ -290,6 +290,14 @@ def qr(id):
     buf.seek(0)
 
     return Response(buf.getvalue(), mimetype='image/png')
+# ================================
+# SINGLE QR
+# ================================
+
+@app.route('/single_qr/<id>')
+@login_required
+def single_qr(id):
+    return render_template("single_qr.html", id=id)
 
 # ================================
 # PRINT QR LABELS
