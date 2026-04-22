@@ -318,9 +318,11 @@ def label(id):
     qr_url = f"https://app.safetymaxfire.com/extinguisher/{id}"
 
     # --- SETTINGS ---
-    WIDTH = 400   # 50mm
-    HEIGHT = 240  # 30mm
-    QR_SIZE = 160
+    DPI = 300
+
+    WIDTH = int(50 * DPI / 25.4)   # ≈ 590 px
+    HEIGHT = int(30 * DPI / 25.4)  # ≈ 354 px
+    QR_SIZE = 260
 
     # Create QR
     qr = qrcode.make(qr_url)
@@ -332,9 +334,9 @@ def label(id):
 
     # Fonts
     try:
-        title_font = ImageFont.truetype("static/fonts/0222.ttf", 26)
-        small_font = ImageFont.truetype("static/fonts/0222.ttf", 18)
-        id_font = ImageFont.truetype("arial.ttf", 14)
+        title_font = ImageFont.truetype("static/fonts/0222.ttf", 40)
+        small_font = ImageFont.truetype("static/fonts/0222.ttf", 24)
+        id_font = ImageFont.truetype("arial.ttf", 22)
     except:
         title_font = ImageFont.load_default()
         small_font = ImageFont.load_default()
@@ -343,7 +345,7 @@ def label(id):
     # 🔴 TOP: COMPANY NAME
     # =========================
     draw.text(
-        (WIDTH//2, 8),
+        (WIDTH//2, 20),
         "SAFETYMAX",
         fill="black",
         anchor="ma",
@@ -351,7 +353,7 @@ def label(id):
     )
 
     draw.text(
-        (WIDTH//2, 32),
+        (WIDTH//2, 60),
         "FIRE ENGINEERS",
         fill="black",
         anchor="ma",
@@ -362,7 +364,7 @@ def label(id):
     # 🔳 CENTER: QR
     # =========================
     qr_x = (WIDTH - QR_SIZE) // 2
-    qr_y = 55
+    qr_y = 90
 
     canvas.paste(qr, (qr_x, qr_y))
 
@@ -372,9 +374,8 @@ def label(id):
     id_y = qr_y + QR_SIZE + 8
 
     draw.text(
-        (WIDTH//2, id_y),
-        f"{id}",
-        fill="black",
+        (WIDTH//2, HEIGHT - 30),
+        id,
         anchor="ma",
         font=small_font
     )
