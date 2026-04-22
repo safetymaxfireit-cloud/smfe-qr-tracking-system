@@ -332,6 +332,27 @@ def bulk_upload():
         return "✅ Bulk Upload Done"
 
     return render_template("bulk_upload.html")
+############################################
+
+@app.route('/add-supply-date-column')
+def add_supply_date():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+        ALTER TABLE extinguishers 
+        ADD COLUMN IF NOT EXISTS supply_date TEXT;
+        """)
+
+        conn.commit()
+        conn.close()
+
+        return "✅ supply_date added"
+
+    except Exception as e:
+        return f"🔥 Error: {str(e)}"
+
 
 # ================================
 @app.route('/check')
