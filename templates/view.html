@@ -7,7 +7,12 @@
     @font-face {
       font-family: 'SMFont';
       src: url('/static/fonts/0222.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
     }
+body {
+  font-family: 'SMFont', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+}
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'SMFont', Arial, sans-serif; background: #f0f4f8; min-height: 100vh; }
 
@@ -19,7 +24,7 @@
     .logo-area {
       display: flex;
       align-items: left;
-      justify-content: left;
+      justify-content: flex-start;
       gap: 14px;
       margin-bottom: 10px;
     }
@@ -35,6 +40,8 @@
       gap: 2px;
       transition: background .2s;
     }
+
+    .logo-img { width: 58px; height: 58px; object-fit: contain; border-radius: 50%; }
     .logo-upload-circle:hover { background: rgba(255,255,255,0.18); }
     .logo-upload-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
     .upload-plus { font-size: 22px; color: #c0392b; line-height: 1; }
@@ -103,11 +110,7 @@
 
 <div class="top-bar">
   <div class="logo-area">
-    <label class="logo-upload-circle" for="logo-upload" id="logo-circle">
-      <span class="upload-plus">+</span>
-      <span class="upload-hint-text">Upload<br>Logo</span>
-    </label>
-    <input type="file" id="logo-upload" accept="image/*" style="display:none">
+    <img src="/static/images/logo.png" class="logo-img" alt="SafetyMax Logo">
     <div>
       <div class="brand-name">SAFETYMAX FIRE ENGINEERS</div>
       <div class="brand-tagline">Maximum Care &amp; Safety</div>
@@ -195,19 +198,6 @@
   <div class="footer-slogan">Safety Today &middot; Security Tomorrow</div>
   <div class="footer-rights">&copy; 2025 All rights reserved to SafetyMax Fire Engineers</div>
 </div>
-
-<script>
-  document.getElementById('logo-upload').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      const circle = document.getElementById('logo-circle');
-      circle.innerHTML = '<img src="' + ev.target.result + '" alt="Logo" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">';
-    };
-    reader.readAsDataURL(file);
-  });
-</script>
 
 </body>
 </html>
