@@ -240,8 +240,11 @@ def add_extinguisher():
             cursor = conn.cursor()
 # STEP 1: Get next serial number manually
             cursor.execute("""
-            SELECT COALESCE(MAX(serial_number), 0) + 1 FROM extinguishers
-            """)
+            INSERT INTO extinguishers 
+            (client_name, address, po_number, order_id, type, location, supply_date, expiry_date, remarks)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            RETURNING serial_number
+            """, (...))
             serial_number = cursor.fetchone()[0]
             
 # STEP 2: Generate ID
@@ -529,6 +532,29 @@ def bulk_upload():
         return "✅ Bulk Upload Done"
 
     return render_template("bulk_upload.html")
+
+
+##################################
+
+@app.route('/reset_data')
+@login_required
+@role_required('admin')
+def reset_data():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("TRUNCATE TABLE extinguishers RESTART IDENTITY;")
+
+        conn.commit()
+        conn.close()
+
+        return "✅ All data cleared and ID reset to 1"
+
+    except Exception as e:
+        return f"🔥 Error: {str(e)}"
+
+
     
 # ================================
 @app.route('/check')
