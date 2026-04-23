@@ -368,67 +368,62 @@ def label(id):
     # 📐 SIZE (50mm x 30mm @300 DPI)
     # =========================
     DPI = 300
-    WIDTH = int(50 * DPI / 25.4)   # 590 px
-    HEIGHT = int(30 * DPI / 25.4)  # 354 px
+    WIDTH = int(50 * DPI / 25.4)
+    HEIGHT = int(30 * DPI / 25.4)
 
-    QR_SIZE = 210   # balanced (prevents cutting)
+    SCALE = 3   # 🔥 Increase for ultra sharp
+
+    W = WIDTH * SCALE
+    H = HEIGHT * SCALE
+
+    QR_SIZE = 210 * SCALE
 
     # =========================
-    # 🔳 QR
+    # 🔳 HIGH RES QR (IMPORTANT)
     # =========================
-    qr = qrcode.make(qr_url)
-    qr = qr.resize((QR_SIZE, QR_SIZE))
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,   # 🔥 HIGH QUALITY
+        border=2
+    )
+    qr.add_data(qr_url)
+    qr.make(fit=True)
+
+    qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+    qr_img = qr_img.resize((QR_SIZE, QR_SIZE), Image.NEAREST)  # 🔥 NO BLUR
 
     # =========================
-    # 🧱 CANVAS
+    # 🧱 CANVAS (HIGH RES)
     # =========================
-    canvas = Image.new("RGB", (WIDTH, HEIGHT), "white")
+    canvas = Image.new("RGB", (W, H), "white")
     draw = ImageDraw.Draw(canvas)
 
     # =========================
-    # 🔤 FONTS (Adjusted)
+    # 🔤 FONTS (HIGH RES)
     # =========================
-    try:
-        title_font = ImageFont.truetype(FONT_PATH, 38)   # slightly smaller
-        subtitle_font = ImageFont.truetype(FONT_PATH, 22)
-        id_font = ImageFont.truetype(FONT_PATH, 22)    # clean readable
-    except:
-        title_font = ImageFont.load_default()
-        subtitle_font = ImageFont.load_default()
-        id_font = ImageFont.load_default()
+    title_font = ImageFont.truetype(FONT_PATH, 38 * SCALE)
+    subtitle_font = ImageFont.truetype(FONT_PATH, 22 * SCALE)
+    id_font = ImageFont.truetype(FONT_PATH, 22 * SCALE)
 
     # =========================
-    # 🔴 HEADER (RED + FIXED SPACING)
+    # 🔴 HEADER
+    # =========================
+    draw.text((W//2, 15*SCALE), "SAFETYMAX", fill=(200,0,0), anchor="ma", font=title_font)
+    draw.text((W//2, 55*SCALE), "FIRE ENGINEERS", fill=(200,0,0), anchor="ma", font=subtitle_font)
+
+    # =========================
+    # 🔳 QR POSITION
+    # =========================
+    qr_x = (W - QR_SIZE)//2
+    qr_y = 85 * SCALE
+    canvas.paste(qr_img, (qr_x, qr_y))
+
+    # =========================
+    # 🔵 ID TEXT
     # =========================
     draw.text(
-        (WIDTH//2, 15),
-        "SAFETYMAX",
-        fill=(200, 0, 0),   # RED
-        anchor="ma",
-        font=title_font
-    )
-
-    draw.text(
-        (WIDTH//2, 55),   # controlled spacing
-        "FIRE ENGINEERS",
-        fill=(200, 0, 0),
-        anchor="ma",
-        font=subtitle_font
-    )
-
-    # =========================
-    # 🔳 QR POSITION (CENTERED)
-    # =========================
-    qr_x = (WIDTH - QR_SIZE) // 2
-    qr_y = 85
-
-    canvas.paste(qr, (qr_x, qr_y))
-
-    # =========================
-    # 🔵 ID (VISIBLE + CLEAN)
-    # =========================
-    draw.text(
-        (WIDTH//2, HEIGHT - 35),   # safe margin (no cutting)
+        (W//2, H - 35*SCALE),
         id,
         fill=(0,0,0),
         anchor="mm",
@@ -436,13 +431,18 @@ def label(id):
     )
 
     # =========================
+    # ✅ DOWNSCALE (CRISP)
+    # =========================
+    canvas = canvas.resize((WIDTH, HEIGHT), Image.LANCZOS)
+
+    # 🔄 ROTATE (for label roll)
+    canvas = canvas.rotate(90, expand=True)
+
+    # =========================
     # 📦 EXPORT
     # =========================
-    # 🔄 Rotate LEFT (90° anti-clockwise)
-    canvas = canvas.rotate(90, expand=True)
-    canvas = canvas.convert("RGB")
     buf = io.BytesIO()
-    canvas.save(buf, format="PNG", dpi=(300,300), optimize=True)
+    canvas.save(buf, format="PNG", dpi=(300,300))
     buf.seek(0)
 
     return Response(buf.getvalue(), mimetype='image/png')
