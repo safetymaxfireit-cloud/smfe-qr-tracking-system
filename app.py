@@ -404,7 +404,7 @@ def label(id):
     # =========================
     title_font = ImageFont.truetype(FONT_PATH, 38 * SCALE)
     subtitle_font = ImageFont.truetype(FONT_PATH, 22 * SCALE)
-    id_font = ImageFont.truetype(FONT_PATH, 20 * SCALE)
+    id_font = ImageFont.truetype(FONT_PATH, 18 * SCALE)
 
     # =========================
     # 🔴 HEADER
@@ -436,7 +436,7 @@ def label(id):
     canvas = canvas.resize((WIDTH, HEIGHT), Image.LANCZOS)
 
     # 🔄 ROTATE (for label roll)
-    canvas = canvas.rotate(90, expand=True)
+    #canvas = canvas.rotate(90, expand=True)
 
     # =========================
     # 📦 EXPORT
