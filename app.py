@@ -242,8 +242,6 @@ def add_extinguisher():
             cursor.execute("""
             SELECT COALESCE(MAX(serial_number), 0) + 1 FROM extinguishers
             """)
-            RETURNING serial_number
-            """, (...))
             serial_number = cursor.fetchone()[0]
             
 # STEP 2: Generate ID
