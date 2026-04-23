@@ -1,10 +1,34 @@
 <h2>Edit Extinguisher</h2>
 
 <form method="POST">
-    Type: <input name="type" value="{{ data[1] }}"><br><br>
-    Location: <input name="location" value="{{ data[2] }}"><br><br>
-    Supply Date: <input type="date" name="supply_date" value="{{ data[3] }}"><br><br>
-    Expiry: <input type="date" name="expiry" value="{{ data[4] }}"><br><br>
+
+    Client Name:
+    <input name="client_name" value="{{ data.client_name }}"><br><br>
+
+    Address:
+    <input name="address" value="{{ data.address }}"><br><br>
+
+    PO Number:
+    <input name="po_number" value="{{ data.po_number }}"><br><br>
+
+    Order ID:
+    <input name="order_id" value="{{ data.order_id }}"><br><br>
+
+    Type:
+    <input name="type" value="{{ data.type }}"><br><br>
+
+    Location:
+    <input name="location" value="{{ data.location }}"><br><br>
+
+    Supply Date:
+    <input type="date" name="supply_date" value="{{ data.supply_date }}"><br><br>
+
+    Expiry:
+    <input type="date" name="expiry" value="{{ data.expiry_date }}"><br><br>
+
+    Remarks:
+    <input name="remarks" value="{{ data.remarks }}"><br><br>
 
     <button type="submit">Update</button>
+
 </form>
