@@ -240,9 +240,8 @@ def add_extinguisher():
             cursor = conn.cursor()
 # STEP 1: Get next serial number manually
             cursor.execute("""
-            INSERT INTO extinguishers 
-            (client_name, address, po_number, order_id, type, location, supply_date, expiry_date, remarks)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            SELECT COALESCE(MAX(serial_number), 0) + 1 FROM extinguishers
+            """)
             RETURNING serial_number
             """, (...))
             serial_number = cursor.fetchone()[0]
