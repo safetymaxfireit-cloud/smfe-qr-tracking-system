@@ -404,7 +404,7 @@ def label(id):
     # =========================
     title_font = ImageFont.truetype(FONT_PATH, 38 * SCALE)
     subtitle_font = ImageFont.truetype(FONT_PATH, 22 * SCALE)
-    id_font = ImageFont.truetype(FONT_PATH, 22 * SCALE)
+    id_font = ImageFont.truetype(FONT_PATH, 20 * SCALE)
 
     # =========================
     # 🔴 HEADER
