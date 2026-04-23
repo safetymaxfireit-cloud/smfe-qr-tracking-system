@@ -320,6 +320,11 @@ def edit_extinguisher(id):
     cursor.execute("SELECT * FROM extinguishers WHERE id=%s", (id,))
     row = cursor.fetchone()
 
+
+    if not row:
+        conn.close()
+        return "❌ Record not found"
+
     columns = [desc[0] for desc in cursor.description]
     data = dict(zip(columns, row))
 
