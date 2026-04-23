@@ -41,7 +41,7 @@ body {
       transition: background .2s;
     }
 
-    .logo-img { width: 60px; height: 60px; object-fit: contain; border-radius: 90%; }
+    .logo-img { width: 60px; height: 60px; object-fit: contain; border-radius: 95%; }
     .logo-upload-circle:hover { background: rgba(255,255,255,0.18); }
     .logo-upload-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
     .upload-plus { font-size: 22px; color: #c0392b; line-height: 1; }
@@ -52,11 +52,28 @@ body {
       font-family: 'SMFont', Arial, sans-serif;
       letter-spacing: 0.3px; text-align: left;
     }
+    .header-wrapper {
+      display: flex;
+      align-items: center; /* Vertically aligns them */
+      position: relative;  /* Necessary for the center positioning */
+      width: 100%;
+      padding: 10px;
+    }
     .brand-tagline { font-size: 12px; color: #27c2af; margin-top: 4px; text-align: left; }
     .sys-subtitle {
-      font-size: 18px; color: #000; font-weight: 700;
+      /* Positioning Logic */
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+
+      /* Your Original Styles */
+      font-size: 18px; 
+      color: #000; 
+      font-weight: 700;
       font-family: 'SMFont', Arial, sans-serif;
-      letter-spacing: 0.5px; margin-top: 05px; text-align: center;
+      letter-spacing: 0.5px; 
+      margin-top: 5px; /* Fixed '05px' to '5px' */
     }
 
     .unit-banner { background: #c0392b; }
@@ -114,8 +131,10 @@ body {
     <div>
       <div class="brand-name">SAFETYMAX</div>
       <div class="brand-name">FIRE ENGINEERS</div>
-      <div class="sys-subtitle">Fire Extinguisher Management System</div>
-      <div class="brand-tagline">Maximum Care &amp; Safety ; class="sys-subtitle">Fire Extinguisher Management System</div>
+      <div class="header-wrapper">
+        <div class="brand-tagline">Maximum Care & Safety</div>
+        <div class="sys-subtitle">Fire Extinguisher Management System</div>
+      </div>
     </div>
   </div>
 </div>
