@@ -391,7 +391,7 @@ def label(id):
     try:
         title_font = ImageFont.truetype(FONT_PATH, 38)   # slightly smaller
         subtitle_font = ImageFont.truetype(FONT_PATH, 22)
-        id_font = ImageFont.load_default()    # clean readable
+        id_font = ImageFont.truetype(FONT_PATH, 22)    # clean readable
     except:
         title_font = ImageFont.load_default()
         subtitle_font = ImageFont.load_default()
@@ -430,8 +430,8 @@ def label(id):
     draw.text(
         (WIDTH//2, HEIGHT - 35),   # safe margin (no cutting)
         id,
-        fill="black",
-        anchor="ma",
+        fill=(0,0,0),
+        anchor="mm",
         font=id_font
     )
 
@@ -440,9 +440,9 @@ def label(id):
     # =========================
     # 🔄 Rotate LEFT (90° anti-clockwise)
     canvas = canvas.rotate(90, expand=True)
-    
+    canvas = canvas.convert("RGB")
     buf = io.BytesIO()
-    canvas.save(buf, format="PNG", dpi=(300,300))
+    canvas.save(buf, format="PNG", dpi=(300,300), optimize=True)
     buf.seek(0)
 
     return Response(buf.getvalue(), mimetype='image/png')
