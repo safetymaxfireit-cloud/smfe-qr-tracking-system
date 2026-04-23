@@ -281,48 +281,76 @@ def add_extinguisher():
 # ================================
 # EDIT
 # ================================
-@app.route('/edit/<id>', methods=['GET','POST'])
+@app.route('/edit/<path:id>', methods=['GET','POST'])
 @login_required
 @role_required('admin')
 def edit_extinguisher(id):
+
     conn = get_connection()
     cursor = conn.cursor()
 
     if request.method == 'POST':
-        cursor.execute("""
-        UPDATE extinguishers SET
-        id=%s,
-        client_name=%s,
-        address=%s,
-        po_number=%s,
-        order_id=%s,
-        type=%s,
-        location=%s,
-        supply_date=%s,
-        expiry_date=%s,
-        remarks=%s
-        WHERE id=%s
-        """, (
-            request.form.get('id'),
-            request.form.get('client_name'),
-            request.form.get('address'),
-            request.form.get('po_number'),
-            request.form.get('order_id'),
-            request.form.get('type'),
-            request.form.get('location'),
-            request.form.get('supply_date'),
-            request.form.get('expiry'),
-            request.form.get('remarks'),
-            id
-        ))
+        try:
+            new_id = request.form.get('id')
 
-        conn.commit()
-        conn.close()
-        return redirect(f"/extinguisher/{id}")
+            if not new_id:
+                conn.close()
+                return "❌ ID cannot be empty"
 
-    cursor.execute("SELECT * FROM extinguishers WHERE id=%s", (id,))
+            # Check duplicate ID
+            cursor.execute(
+                "SELECT id FROM extinguishers WHERE id=%s AND id!=%s",
+                (new_id, id)
+            )
+            if cursor.fetchone():
+                conn.close()
+                return "❌ ID already exists"
+
+            cursor.execute("""
+            UPDATE extinguishers SET
+            id=%s,
+            client_name=%s,
+            address=%s,
+            po_number=%s,
+            order_id=%s,
+            type=%s,
+            location=%s,
+            supply_date=%s,
+            expiry_date=%s,
+            remarks=%s
+            WHERE id=%s
+            """, (
+                new_id,
+                request.form.get('client_name'),
+                request.form.get('address'),
+                request.form.get('po_number'),
+                request.form.get('order_id'),
+                request.form.get('type'),
+                request.form.get('location'),
+                request.form.get('supply_date'),
+                request.form.get('expiry'),
+                request.form.get('remarks'),
+                id
+            ))
+
+            conn.commit()
+            conn.close()
+
+            return redirect(f"/extinguisher/{new_id}")
+
+        except Exception as e:
+            conn.rollback()
+            conn.close()
+            return f"❌ Error updating: {str(e)}"
+
+    # GET
+    cursor.execute("""
+    SELECT id, client_name, address, po_number, order_id,
+           type, location, supply_date, expiry_date, remarks
+    FROM extinguishers WHERE id=%s
+    """, (id,))
+
     row = cursor.fetchone()
-
 
     if not row:
         conn.close()
@@ -332,8 +360,8 @@ def edit_extinguisher(id):
     data = dict(zip(columns, row))
 
     conn.close()
-    return render_template("edit.html", data=data)
 
+    return render_template("edit.html", data=data)
 # ================================
 # QR
 # ================================
