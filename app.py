@@ -291,6 +291,7 @@ def edit_extinguisher(id):
     if request.method == 'POST':
         cursor.execute("""
         UPDATE extinguishers SET
+        id=%s,
         client_name=%s,
         address=%s,
         po_number=%s,
@@ -302,6 +303,7 @@ def edit_extinguisher(id):
         remarks=%s
         WHERE id=%s
         """, (
+            request.form.get('id'),
             request.form.get('client_name'),
             request.form.get('address'),
             request.form.get('po_number'),
