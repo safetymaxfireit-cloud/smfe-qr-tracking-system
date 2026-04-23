@@ -532,29 +532,6 @@ def bulk_upload():
         return "✅ Bulk Upload Done"
 
     return render_template("bulk_upload.html")
-
-
-##################################
-
-@app.route('/reset_data')
-@login_required
-@role_required('admin')
-def reset_data():
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("TRUNCATE TABLE extinguishers RESTART IDENTITY;")
-
-        conn.commit()
-        conn.close()
-
-        return "✅ All data cleared and ID reset to 1"
-
-    except Exception as e:
-        return f"🔥 Error: {str(e)}"
-
-
     
 # ================================
 @app.route('/check')
