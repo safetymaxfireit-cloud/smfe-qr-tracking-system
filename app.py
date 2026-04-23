@@ -282,6 +282,7 @@ def add_extinguisher():
 # EDIT
 # ================================
 @app.route('/edit/<id>', methods=['GET','POST'])
+@login_required
 @role_required('admin')
 def edit_extinguisher(id):
     conn = get_connection()
@@ -301,15 +302,15 @@ def edit_extinguisher(id):
         remarks=%s
         WHERE id=%s
         """, (
-            request.form['client_name'],
-            request.form['address'],
-            request.form['po_number'],
-            request.form['order_id'],
-            request.form['type'],
-            request.form['location'],
-            request.form['supply_date'],
-            request.form['expiry'],
-            request.form['remarks'],
+            request.form.get('client_name'),
+            request.form.get('address'),
+            request.form.get('po_number'),
+            request.form.get('order_id'),
+            request.form.get('type'),
+            request.form.get('location'),
+            request.form.get('supply_date'),
+            request.form.get('expiry'),
+            request.form.get('remarks'),
             id
         ))
 
