@@ -565,7 +565,36 @@ def bulk_upload():
         return "✅ Bulk Upload Done"
 
     return render_template("bulk_upload.html")
-    
+
+# ================================
+# BACKUP
+# ================================
+@app.route('/backup')
+@login_required
+@role_required('admin')
+def backup():
+
+    conn = get_connection()
+
+    df = pd.read_sql("SELECT * FROM extinguishers ORDER BY serial_number", conn)
+    conn.close()
+
+    output = io.BytesIO()
+
+    # Export as Excel
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Fire Extinguishers')
+
+    output.seek(0)
+
+    return Response(
+        output.getvalue(),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": "attachment; filename=SafetyMax_Backup.xlsx"
+        }
+    )
+   
 # ================================
 @app.route('/check')
 def check():
